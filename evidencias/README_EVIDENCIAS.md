@@ -5,6 +5,8 @@ Este diretório documenta as evidências do desenvolvimento e da validação pon
 
 `S3 Input → Lambda Producer → SQS → Lambda Consumer → RDS PostgreSQL → S3 Output`
 
+> O diretório/repositório local foi renomeado para `C3-Trabalho-Ingestao-Pipeline-Atividade7`. O conteúdo desta pasta continua correspondendo à **Atividade 6**, por isso os nomes dos recursos AWS e dos arquivos de evidência foram preservados.
+
 ## Resultado do teste final
 - Arquivo de entrada: `eventos-20260916-183840.csv`.
 - Registros enviados pela Producer ao SQS: **3**.
@@ -25,7 +27,7 @@ Este diretório documenta as evidências do desenvolvimento e da validação pon
 Os logs desta pasta foram sanitizados. Valores de `DB_PASSWORD` e entradas de senha foram removidos. Nunca versionar credenciais em Git.
 
 ## Pasta local recomendada
-`D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade6\evidencias`
+`D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade7\evidencias`
 
 ## Evidências centrais
 1. A Producer recebeu o CSV do bucket de entrada e enviou três mensagens ao SQS.
