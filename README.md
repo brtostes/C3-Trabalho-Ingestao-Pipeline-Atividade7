@@ -8,6 +8,8 @@ Implementar e validar na AWS um pipeline orientado a eventos com o fluxo:
 
 A solução foi executada e validada ponta a ponta em 16/09/2026 na região `us-east-2`.
 
+> **Observação sobre o projeto:** o diretório/repositório local foi renomeado para `C3-Trabalho-Ingestao-Pipeline-Atividade7`. O conteúdo documentado neste repositório continua sendo o desenvolvimento da **Atividade 6**, portanto os nomes dos recursos AWS (`atividade6-*`) e dos arquivos de evidência da atividade foram preservados.
+
 ## 2. Arquitetura implementada
 
 ```mermaid
@@ -71,7 +73,7 @@ Indicadores finais:
 ## 5. Estrutura do projeto
 
 ```text
-C3-Trabalho-Ingestao-Pipeline-Atividade6/
+C3-Trabalho-Ingestao-Pipeline-Atividade7/
 ├── docs/
 │   ├── 01_solucao_proposta.md
 │   └── 02_roteiro_evidencias.md
@@ -135,13 +137,15 @@ Para fins acadêmicos, a Lambda Consumer utiliza variáveis de ambiente. Em ambi
 
 Repositório remoto:
 
-`https://github.com/brtostes/C3-Trabalho-Ingestao-Pipeline-Atividade6`
+`https://github.com/brtostes/C3-Trabalho-Ingestao-Pipeline-Atividade7`
 
 Na pasta local:
 
 ```powershell
-cd "D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade6"
-git pull origin main
+cd "D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade7"
+git remote set-url origin https://github.com/brtostes/C3-Trabalho-Ingestao-Pipeline-Atividade7.git
+git fetch origin
+git pull --ff-only origin main
 ```
 
 ## 9. Resultado final
