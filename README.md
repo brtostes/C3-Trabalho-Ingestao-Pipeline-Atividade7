@@ -10,9 +10,7 @@ A solução foi executada e validada ponta a ponta em 16/09/2026 na região `us-
 
 ## 2. Método de implementação
 
-A infraestrutura utilizada no desenvolvimento e na validação desta atividade foi configurada diretamente na AWS por meio do **AWS CloudShell e da AWS CLI**. Foram criados e configurados dessa forma os buckets S3, filas SQS e DLQ, funções Lambda, permissões IAM, integrações S3 → Lambda e SQS → Lambda, RDS PostgreSQL, VPC, sub-redes e Security Group.
-
-A pasta `infra/` contém uma representação **opcional** em Terraform para fins de estudo e reprodutibilidade. Esses arquivos não foram utilizados para provisionar a infraestrutura que originou as evidências apresentadas neste trabalho. Da mesma forma, `scripts/deploy.ps1` e `scripts/destroy.ps1` pertencem apenas a essa alternativa opcional.
+A infraestrutura utilizada no desenvolvimento e na validação foi configurada diretamente na AWS por meio do **AWS CloudShell e da AWS CLI**. Foram criados e configurados os buckets S3, filas SQS e DLQ, funções Lambda, permissões IAM, integrações S3 → Lambda e SQS → Lambda, RDS PostgreSQL, VPC, sub-redes e Security Group.
 
 ## 3. Arquitetura implementada
 
@@ -74,23 +72,43 @@ Indicadores finais:
 
 ```text
 C3-Trabalho-Ingestao-Pipeline-Atividade7/
-├── docs/
 ├── evidencias/
-├── infra/                 # Terraform opcional; não usado na execução validada
+│   ├── 08_teste_referencia_postgresql.png
+│   ├── Manifesto_Evidencias_Atividade6.csv
+│   ├── README_EVIDENCIAS.md
+│   ├── Relatorio_Evidencias_Atividade6_AWS.docx
+│   └── logs/
 ├── lambdas/
+│   ├── consumer/
+│   │   ├── lambda_function.py
+│   │   └── requirements.txt
+│   └── producer/
+│       └── lambda_function.py
 ├── sample/
-├── scripts/
+│   ├── eventos/eventos.csv
+│   └── referencia/referencia.csv
 ├── .gitignore
 └── README.md
 ```
 
-## 7. Evidências
+## 7. Arquivos mantidos
 
-A pasta `evidencias/` contém o relatório consolidado, manifesto, logs sanitizados, scripts de coleta, evidência do PostgreSQL e registro do teste ponta a ponta. As evidências correspondem à execução realizada por AWS CloudShell/AWS CLI.
+O repositório contém somente os arquivos relacionados à execução e à comprovação da atividade:
+
+- código-fonte da Lambda Producer;
+- código-fonte da Lambda Consumer;
+- dependência `pg8000` da Consumer;
+- CSV utilizado no teste ponta a ponta;
+- CSV com os dados de referência utilizados no enriquecimento PostgreSQL;
+- relatório e manifesto de evidências;
+- logs sanitizados da execução;
+- evidência do teste de referência no PostgreSQL.
+
+Arquivos Terraform e scripts auxiliares que não participaram da execução validada foram removidos.
 
 ## 8. Segurança
 
-Não versionar arquivos `.env`, configurações contendo credenciais, Access Keys AWS, senhas do PostgreSQL ou chaves privadas. O arquivo `infra/terraform.tfvars`, caso seja criado para experimentar a alternativa Terraform, também não deve ser versionado.
+Não versionar arquivos `.env`, configurações contendo credenciais, Access Keys AWS, senhas do PostgreSQL ou chaves privadas.
 
 ## 9. Sincronização local
 
