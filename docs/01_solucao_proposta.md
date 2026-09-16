@@ -1,63 +1,84 @@
-# Solução proposta — Atividade 6
+# Solução implementada — Atividade 6
 
-## 1. Problema
+## 1. Objetivo
 
-A atividade exige a implementação de um pipeline em cloud no qual dados armazenados no Amazon S3 sejam convertidos em mensagens, enfileirados no Amazon SQS, consumidos por uma função AWS Lambda e enriquecidos mediante consulta a um banco SQL, com persistência do resultado novamente no Amazon S3.
+Implementar um pipeline em cloud no qual arquivos CSV armazenados no Amazon S3 sejam convertidos em mensagens, processados por Amazon SQS e AWS Lambda, enriquecidos por consulta a PostgreSQL no Amazon RDS e persistidos novamente em Amazon S3.
 
-## 2. Decisão arquitetural
+## 2. Arquitetura validada
 
-Foi adotada arquitetura orientada a eventos e desacoplada. O S3 atua como camada de entrada persistente; a primeira Lambda converte registros tabulares em mensagens; o SQS controla a taxa de entrega e oferece retentativa; a segunda Lambda realiza o processamento por mensagem; e o PostgreSQL fornece dados de referência para o enriquecimento.
+Fluxo implementado e testado em 16/09/2026:
 
-A escolha de dois buckets, um de entrada e outro de saída, reduz o risco de recursão acidental do gatilho S3.
+`S3 Input → Lambda Producer → SQS → Lambda Consumer → RDS PostgreSQL → S3 Output`
+
+Recursos principais:
+
+- região: `us-east-2`;
+- Lambda Producer: `atividade6-producer`;
+- SQS: `atividade6-pipeline-queue`;
+- DLQ: `atividade6-pipeline-dlq`;
+- Lambda Consumer: `atividade6-consumer`;
+- RDS: `atividade6-postgres`;
+- bucket de entrada: `atividade6-input-041525320433-us-east-2`;
+- bucket de saída: `atividade6-output-041525320433-us-east-2`.
 
 ## 3. Fluxo lógico
 
-1. O usuário envia um CSV ao bucket de entrada.
-2. O S3 gera um evento `ObjectCreated`.
-3. A Lambda Producer obtém o objeto e interpreta o CSV.
-4. Cada linha é serializada em JSON e enviada ao SQS.
-5. O Lambda Event Source Mapping consulta a fila e invoca a Lambda Consumer.
-6. A Consumer:
-   - normaliza o CNPJ;
-   - se a mensagem for de referência, realiza `UPSERT` no PostgreSQL;
-   - se a mensagem for um evento, consulta a dimensão por CNPJ;
-   - incorpora ao payload os atributos de enriquecimento;
-   - grava o registro final no bucket S3 de saída.
-7. Falhas específicas retornam à fila por meio de resposta parcial de lote.
-8. Após o limite de recebimentos, a mensagem é encaminhada à DLQ.
+1. Um CSV é enviado para `eventos/` no bucket de entrada.
+2. O S3 gera evento `ObjectCreated`.
+3. A Lambda Producer lê o CSV.
+4. Cada linha é serializada em JSON e enviada individualmente ao SQS.
+5. O Event Source Mapping do Lambda consulta a fila e aciona a Consumer.
+6. A Consumer normaliza o CNPJ e consulta `public.dim_enriquecimento` no PostgreSQL.
+7. O registro enriquecido é salvo em `processed/YYYY/MM/DD/` no bucket de saída.
+8. Em falhas repetidas, a mensagem pode ser encaminhada à DLQ.
 
-## 4. Estratégia de dados
+## 4. Estratégia de enriquecimento
 
-Para tornar o laboratório autônomo, a carga da dimensão de enriquecimento também percorre a fila. Assim, não é necessário disponibilizar o PostgreSQL à Internet nem executar `INSERT` manualmente.
+A tabela de referência utilizada no teste contém CNPJ normalizado, categoria e descrição. A Consumer executa uma consulta por `cnpj_norm` e inclui no JSON final:
 
-Os arquivos no prefixo `referencia/` alimentam o banco; os arquivos no prefixo `eventos/` são enriquecidos.
+- `enriquecimento_encontrado`;
+- `categoria`;
+- `descricao`.
 
-## 5. Relação com as atividades anteriores
+Quando não existe correspondência, o registro é preservado, `enriquecimento_encontrado` recebe `false` e os campos de enriquecimento permanecem nulos.
 
-A solução conserva conceitos já exercitados anteriormente — ingestão, camadas, normalização, banco relacional, tratamento programático, orquestração e qualidade — e acrescenta os conceitos de processamento orientado a eventos, desacoplamento, filas, retentativa e funções serverless.
+## 5. Teste realizado
 
-Como continuidade didática, recomenda-se substituir os arquivos de amostra pelos mesmos dados de reclamações e enquadramento utilizados nas atividades anteriores.
+Foram enviados três registros:
 
-## 6. Critérios de aceitação
+- `REC-E2E-001`: correspondência encontrada — `Servicos / Empresa Exemplo A`;
+- `REC-E2E-002`: correspondência encontrada — `Comercio / Empresa Exemplo B`;
+- `REC-E2E-003`: nenhuma correspondência.
 
-A atividade poderá ser considerada tecnicamente demonstrada quando:
+Resultados observados:
 
-- o upload de um arquivo no S3 disparar automaticamente a Lambda Producer;
-- a fila receber mensagens correspondentes às linhas do arquivo;
-- a Lambda Consumer for acionada pela fila;
-- a tabela PostgreSQL receber registros de referência;
-- os eventos forem consultados/enriquecidos pelo banco;
-- os resultados forem gravados automaticamente no S3;
-- os logs demonstrarem o processamento;
-- a DLQ e as retentativas estiverem configuradas.
+- 3 mensagens enviadas pela Producer;
+- 3 mensagens processadas pela Consumer;
+- 3 novos objetos JSON gravados no S3 Output;
+- fila principal ao final com 0 mensagens;
+- DLQ ao final com 0 mensagens.
 
-## 7. Pontos a discutir no relatório
+## 6. Decisões arquiteturais
 
-- diferença entre processamento em lote e processamento orientado a eventos;
-- papel da fila como mecanismo de desacoplamento e amortecimento;
-- semântica de entrega "at least once";
-- necessidade de idempotência;
-- impacto do tamanho do batch;
-- segurança de rede do RDS;
-- custos associados aos recursos cloud;
-- possibilidade de evolução para Kinesis ou MSK/Kafka em cenários de streaming contínuo.
+- Dois buckets distintos evitam recursão do gatilho S3.
+- SQS desacopla ingestão e processamento.
+- DLQ permite isolamento de falhas persistentes.
+- RDS permanece privado em VPC.
+- A Consumer utiliza `ReportBatchItemFailures` para tratamento parcial de lote.
+- O tamanho de lote adotado na validação foi 1, facilitando rastreabilidade por mensagem.
+- O timeout da Consumer foi configurado em 60 segundos.
+
+## 7. Segurança
+
+Credenciais não devem ser versionadas. A senha do PostgreSQL utilizada durante o laboratório não está armazenada nos arquivos do repositório. Em produção, recomenda-se AWS Secrets Manager.
+
+## 8. Critérios de aceite atendidos
+
+- gatilho automático do S3 validado;
+- envio SQS validado;
+- acionamento automático da Consumer validado;
+- consulta ao PostgreSQL validada;
+- enriquecimento validado;
+- gravação no S3 Output validada;
+- DLQ configurada e vazia após teste bem-sucedido;
+- logs do CloudWatch registrados como evidência.
