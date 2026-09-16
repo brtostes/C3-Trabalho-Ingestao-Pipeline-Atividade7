@@ -30,3 +30,8 @@ venv/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Arquivos temporarios do Microsoft Office
+~$*.docx
+~$*.xlsx
+~$*.pptx

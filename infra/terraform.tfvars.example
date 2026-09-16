@@ -1,0 +1,6 @@
+aws_region        = "us-east-1"
+project_name      = "atividade6-pipeline"
+db_name           = "atividade6"
+db_username       = "atividade6"
+db_password       = "TROQUE-POR-UMA-SENHA-FORTE"
+db_instance_class = "db.t4g.micro"
