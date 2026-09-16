@@ -8,7 +8,13 @@ Implementar e validar na AWS um pipeline orientado a eventos com o fluxo:
 
 A solução foi executada e validada ponta a ponta em 16/09/2026 na região `us-east-2`.
 
-## 2. Arquitetura implementada
+## 2. Método de implementação
+
+A infraestrutura utilizada no desenvolvimento e na validação desta atividade foi configurada diretamente na AWS por meio do **AWS CloudShell e da AWS CLI**. Foram criados e configurados dessa forma os buckets S3, filas SQS e DLQ, funções Lambda, permissões IAM, integrações S3 → Lambda e SQS → Lambda, RDS PostgreSQL, VPC, sub-redes e Security Group.
+
+A pasta `infra/` contém uma representação **opcional** em Terraform para fins de estudo e reprodutibilidade. Esses arquivos não foram utilizados para provisionar a infraestrutura que originou as evidências apresentadas neste trabalho. Da mesma forma, `scripts/deploy.ps1` e `scripts/destroy.ps1` pertencem apenas a essa alternativa opcional.
+
+## 3. Arquitetura implementada
 
 ```mermaid
 flowchart LR
@@ -31,7 +37,7 @@ flowchart LR
 - RDS PostgreSQL: `atividade6-postgres`
 - Runtime das Lambdas: Python 3.12
 
-## 3. Funcionamento
+## 4. Funcionamento
 
 1. Um arquivo CSV é enviado para o prefixo `eventos/` no bucket de entrada.
 2. O S3 aciona automaticamente a Lambda Producer.
@@ -41,9 +47,7 @@ flowchart LR
 6. Cada resultado é persistido em JSON no bucket de saída, no prefixo `processed/YYYY/MM/DD/`.
 7. Mensagens que falharem repetidamente são encaminhadas para a DLQ.
 
-## 4. Teste ponta a ponta validado
-
-Arquivo de teste utilizado:
+## 5. Teste ponta a ponta validado
 
 ```csv
 protocolo,cnpj,valor
@@ -51,8 +55,6 @@ REC-E2E-001,11.111.111/0001-91,150.00
 REC-E2E-002,22.222.222/0001-82,320.50
 REC-E2E-003,99.999.999/0001-99,80.00
 ```
-
-Resultado observado:
 
 | Protocolo | Enriquecimento | Categoria | Descrição |
 |---|---|---|---|
@@ -68,76 +70,29 @@ Indicadores finais:
 - 0 mensagens na DLQ;
 - 3 novos arquivos JSON no S3 Output.
 
-## 5. Estrutura do projeto
+## 6. Estrutura do projeto
 
 ```text
 C3-Trabalho-Ingestao-Pipeline-Atividade7/
 ├── docs/
-│   ├── 01_solucao_proposta.md
-│   └── 02_roteiro_evidencias.md
 ├── evidencias/
-│   ├── Manifesto_Evidencias_Atividade6.csv
-│   ├── README_EVIDENCIAS.md
-│   ├── Relatorio_Evidencias_Atividade6_AWS.docx
-│   ├── logs/
-│   └── scripts/
-├── infra/
-│   ├── main.tf
-│   ├── outputs.tf
-│   ├── terraform.tfvars.example
-│   ├── variables.tf
-│   └── versions.tf
+├── infra/                 # Terraform opcional; não usado na execução validada
 ├── lambdas/
-│   ├── consumer/
-│   │   ├── lambda_function.py
-│   │   └── requirements.txt
-│   └── producer/
-│       └── lambda_function.py
 ├── sample/
-│   ├── eventos/eventos.csv
-│   └── referencia/referencia.csv
 ├── scripts/
-│   ├── build_lambdas.ps1
-│   ├── deploy.ps1
-│   ├── destroy.ps1
-│   └── teste_pipeline.ps1
 ├── .gitignore
 └── README.md
 ```
 
-## 6. Evidências
+## 7. Evidências
 
-A pasta `evidencias/` contém:
+A pasta `evidencias/` contém o relatório consolidado, manifesto, logs sanitizados, scripts de coleta, evidência do PostgreSQL e registro do teste ponta a ponta. As evidências correspondem à execução realizada por AWS CloudShell/AWS CLI.
 
-- relatório consolidado em Word;
-- manifesto das evidências;
-- logs sanitizados das execuções;
-- scripts para coleta de evidências;
-- evidência do PostgreSQL;
-- registro do teste ponta a ponta.
+## 8. Segurança
 
-Os logs foram sanitizados para não expor senha de banco ou credenciais AWS.
+Não versionar arquivos `.env`, configurações contendo credenciais, Access Keys AWS, senhas do PostgreSQL ou chaves privadas. O arquivo `infra/terraform.tfvars`, caso seja criado para experimentar a alternativa Terraform, também não deve ser versionado.
 
-## 7. Segurança
-
-Não versionar:
-
-- `terraform.tfvars`;
-- arquivos `.env`;
-- arquivos `*environment*.json`;
-- Access Keys AWS;
-- senhas do PostgreSQL;
-- chaves privadas.
-
-Para fins acadêmicos, a Lambda Consumer utiliza variáveis de ambiente. Em ambiente de produção, recomenda-se armazenar credenciais no AWS Secrets Manager.
-
-## 8. Sincronização local
-
-Repositório remoto:
-
-`https://github.com/brtostes/C3-Trabalho-Ingestao-Pipeline-Atividade7`
-
-Na pasta local:
+## 9. Sincronização local
 
 ```powershell
 cd "D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade7"
@@ -146,6 +101,6 @@ git fetch origin
 git pull --ff-only origin main
 ```
 
-## 9. Resultado final
+## 10. Resultado final
 
 O pipeline foi validado de forma integrada, comprovando o processamento automático desde a entrada do CSV no S3 até a persistência dos registros enriquecidos no bucket de saída, utilizando SQS para desacoplamento e PostgreSQL para enriquecimento dos dados.
