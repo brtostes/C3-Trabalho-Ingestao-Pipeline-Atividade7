@@ -8,11 +8,7 @@ Implementar e validar na AWS um pipeline orientado a eventos com o fluxo:
 
 A solução foi executada e validada ponta a ponta em 16/09/2026 na região `us-east-2`.
 
-## 2. Método de implementação
-
-A infraestrutura utilizada no desenvolvimento e na validação foi configurada diretamente na AWS por meio do **AWS CloudShell e da AWS CLI**. Foram criados e configurados os buckets S3, filas SQS e DLQ, funções Lambda, permissões IAM, integrações S3 → Lambda e SQS → Lambda, RDS PostgreSQL, VPC, sub-redes e Security Group.
-
-## 3. Arquitetura implementada
+## 2. Arquitetura implementada
 
 ```mermaid
 flowchart LR
@@ -35,7 +31,7 @@ flowchart LR
 - RDS PostgreSQL: `atividade6-postgres`
 - Runtime das Lambdas: Python 3.12
 
-## 4. Funcionamento
+## 3. Funcionamento
 
 1. Um arquivo CSV é enviado para o prefixo `eventos/` no bucket de entrada.
 2. O S3 aciona automaticamente a Lambda Producer.
@@ -45,7 +41,9 @@ flowchart LR
 6. Cada resultado é persistido em JSON no bucket de saída, no prefixo `processed/YYYY/MM/DD/`.
 7. Mensagens que falharem repetidamente são encaminhadas para a DLQ.
 
-## 5. Teste ponta a ponta validado
+## 4. Teste ponta a ponta validado
+
+Arquivo de teste utilizado:
 
 ```csv
 protocolo,cnpj,valor
@@ -53,6 +51,8 @@ REC-E2E-001,11.111.111/0001-91,150.00
 REC-E2E-002,22.222.222/0001-82,320.50
 REC-E2E-003,99.999.999/0001-99,80.00
 ```
+
+Resultado observado:
 
 | Protocolo | Enriquecimento | Categoria | Descrição |
 |---|---|---|---|
@@ -68,16 +68,25 @@ Indicadores finais:
 - 0 mensagens na DLQ;
 - 3 novos arquivos JSON no S3 Output.
 
-## 6. Estrutura do projeto
+## 5. Estrutura do projeto
 
 ```text
 C3-Trabalho-Ingestao-Pipeline-Atividade7/
+├── docs/
+│   ├── 01_solucao_proposta.md
+│   └── 02_roteiro_evidencias.md
 ├── evidencias/
-│   ├── 08_teste_referencia_postgresql.png
 │   ├── Manifesto_Evidencias_Atividade6.csv
 │   ├── README_EVIDENCIAS.md
 │   ├── Relatorio_Evidencias_Atividade6_AWS.docx
-│   └── logs/
+│   ├── logs/
+│   └── scripts/
+├── infra/
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── terraform.tfvars.example
+│   ├── variables.tf
+│   └── versions.tf
 ├── lambdas/
 │   ├── consumer/
 │   │   ├── lambda_function.py
@@ -87,30 +96,48 @@ C3-Trabalho-Ingestao-Pipeline-Atividade7/
 ├── sample/
 │   ├── eventos/eventos.csv
 │   └── referencia/referencia.csv
+├── scripts/
+│   ├── build_lambdas.ps1
+│   ├── deploy.ps1
+│   ├── destroy.ps1
+│   └── teste_pipeline.ps1
 ├── .gitignore
 └── README.md
 ```
 
-## 7. Arquivos mantidos
+## 6. Evidências
 
-O repositório contém somente os arquivos relacionados à execução e à comprovação da atividade:
+A pasta `evidencias/` contém:
 
-- código-fonte da Lambda Producer;
-- código-fonte da Lambda Consumer;
-- dependência `pg8000` da Consumer;
-- CSV utilizado no teste ponta a ponta;
-- CSV com os dados de referência utilizados no enriquecimento PostgreSQL;
-- relatório e manifesto de evidências;
-- logs sanitizados da execução;
-- evidência do teste de referência no PostgreSQL.
+- relatório consolidado em Word;
+- manifesto das evidências;
+- logs sanitizados das execuções;
+- scripts para coleta de evidências;
+- evidência do PostgreSQL;
+- registro do teste ponta a ponta.
 
-Arquivos Terraform e scripts auxiliares que não participaram da execução validada foram removidos.
+Os logs foram sanitizados para não expor senha de banco ou credenciais AWS.
 
-## 8. Segurança
+## 7. Segurança
 
-Não versionar arquivos `.env`, configurações contendo credenciais, Access Keys AWS, senhas do PostgreSQL ou chaves privadas.
+Não versionar:
 
-## 9. Sincronização local
+- `terraform.tfvars`;
+- arquivos `.env`;
+- arquivos `*environment*.json`;
+- Access Keys AWS;
+- senhas do PostgreSQL;
+- chaves privadas.
+
+Para fins acadêmicos, a Lambda Consumer utiliza variáveis de ambiente. Em ambiente de produção, recomenda-se armazenar credenciais no AWS Secrets Manager.
+
+## 8. Sincronização local
+
+Repositório remoto:
+
+`https://github.com/brtostes/C3-Trabalho-Ingestao-Pipeline-Atividade7`
+
+Na pasta local:
 
 ```powershell
 cd "D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade7"
@@ -119,6 +146,6 @@ git fetch origin
 git pull --ff-only origin main
 ```
 
-## 10. Resultado final
+## 9. Resultado final
 
 O pipeline foi validado de forma integrada, comprovando o processamento automático desde a entrada do CSV no S3 até a persistência dos registros enriquecidos no bucket de saída, utilizando SQS para desacoplamento e PostgreSQL para enriquecimento dos dados.

@@ -1,15 +1,21 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+infra/terraform.tfvars
+.terraform.lock.hcl
+
+# Pacotes gerados
+.build/
+dist/
+*.zip
+
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
-
-# Pacotes e arquivos temporarios
-.build/
-dist/
-*.zip
-*.tmp
-*.bak
 
 # Credenciais e variaveis de ambiente
 .env
@@ -33,3 +39,7 @@ credentials.*
 Thumbs.db
 .vscode/
 .idea/
+
+# Arquivos temporarios
+*.tmp
+*.bak
