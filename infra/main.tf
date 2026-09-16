@@ -36,12 +36,12 @@ resource "aws_subnet" "private_b" {
 
 resource "aws_route_table" "private_a" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "${var.project_name}-rt-a" }
+  tags   = { Name = "${var.project_name}-rt-a" }
 }
 
 resource "aws_route_table" "private_b" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "${var.project_name}-rt-b" }
+  tags   = { Name = "${var.project_name}-rt-b" }
 }
 
 resource "aws_route_table_association" "private_a" {
@@ -111,21 +111,20 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_db_instance" "postgres" {
-  identifier             = "${var.project_name}-postgres"
-  engine                 = "postgres"
-  instance_class         = var.db_instance_class
-  allocated_storage      = 20
-  storage_type           = "gp3"
-  db_name                = var.db_name
-  username               = var.db_username
-  password               = var.db_password
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
-
-  publicly_accessible    = false
-  multi_az               = false
-  skip_final_snapshot    = true
-  deletion_protection    = false
+  identifier              = "${var.project_name}-postgres"
+  engine                  = "postgres"
+  instance_class          = var.db_instance_class
+  allocated_storage       = 20
+  storage_type            = "gp3"
+  db_name                 = var.db_name
+  username                = var.db_username
+  password                = var.db_password
+  db_subnet_group_name    = aws_db_subnet_group.main.name
+  vpc_security_group_ids  = [aws_security_group.rds.id]
+  publicly_accessible     = false
+  multi_az                = false
+  skip_final_snapshot     = true
+  deletion_protection     = false
   backup_retention_period = 0
 
   tags = {
@@ -143,104 +142,98 @@ resource "aws_s3_bucket" "output" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_public_access_block" "input" {
+  bucket                  = aws_s3_bucket.input.id
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "output" {
+  bucket                  = aws_s3_bucket.output.id
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+}
+
 resource "aws_sqs_queue" "dlq" {
-  name = "${var.project_name}-dlq"
+  name = "${var.project_name}-pipeline-dlq"
 }
 
 resource "aws_sqs_queue" "main" {
-  name                       = "${var.project_name}-queue"
-  visibility_timeout_seconds = 180
+  name                       = "${var.project_name}-pipeline-queue"
+  visibility_timeout_seconds = 360
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.dlq.arn
-    maxReceiveCount     = 3
+    maxReceiveCount     = 5
   })
 }
 
-resource "aws_iam_role" "producer" {
-  name = "${var.project_name}-producer-role"
+resource "aws_iam_role" "lambda" {
+  name = "${var.project_name}-lambda-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "lambda.amazonaws.com" }
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "producer_logs" {
-  role       = aws_iam_role.producer.name
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_role_policy" "producer_access" {
-  name = "${var.project_name}-producer-access"
-  role = aws_iam_role.producer.id
+resource "aws_iam_role_policy_attachment" "lambda_sqs" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_vpc" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy" "data_access" {
+  name = "${var.project_name}-data-access"
+  role = aws_iam_role.lambda.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["s3:GetObject"]
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = aws_s3_bucket.input.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject"]
         Resource = "${aws_s3_bucket.input.arn}/*"
       },
       {
-        Effect = "Allow"
-        Action = ["sqs:SendMessage"]
+        Effect   = "Allow"
+        Action   = ["s3:PutObject"]
+        Resource = "${aws_s3_bucket.output.arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["sqs:SendMessage", "sqs:GetQueueUrl", "sqs:GetQueueAttributes"]
         Resource = aws_sqs_queue.main.arn
       }
     ]
   })
 }
 
-resource "aws_iam_role" "consumer" {
-  name = "${var.project_name}-consumer-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = { Service = "lambda.amazonaws.com" }
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "consumer_logs" {
-  role       = aws_iam_role.consumer.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_iam_role_policy_attachment" "consumer_sqs" {
-  role       = aws_iam_role.consumer.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
-}
-
-resource "aws_iam_role_policy_attachment" "consumer_vpc" {
-  role       = aws_iam_role.consumer.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-}
-
-resource "aws_iam_role_policy" "consumer_s3" {
-  name = "${var.project_name}-consumer-s3"
-  role = aws_iam_role.consumer.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = ["s3:PutObject"]
-      Resource = "${aws_s3_bucket.output.arn}/*"
-    }]
-  })
-}
-
 resource "aws_lambda_function" "producer" {
   function_name = "${var.project_name}-producer"
-  role          = aws_iam_role.producer.arn
+  role          = aws_iam_role.lambda.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.12"
   timeout       = 60
@@ -258,11 +251,11 @@ resource "aws_lambda_function" "producer" {
 
 resource "aws_lambda_function" "consumer" {
   function_name = "${var.project_name}-consumer"
-  role          = aws_iam_role.consumer.arn
+  role          = aws_iam_role.lambda.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.12"
-  timeout       = 30
-  memory_size   = 512
+  timeout       = 60
+  memory_size   = 256
 
   filename         = "${path.module}/../dist/consumer.zip"
   source_code_hash = filebase64sha256("${path.module}/../dist/consumer.zip")
@@ -288,11 +281,12 @@ resource "aws_lambda_function" "consumer" {
 }
 
 resource "aws_lambda_permission" "allow_s3" {
-  statement_id  = "AllowExecutionFromS3"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.producer.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.input.arn
+  statement_id   = "atividade6-s3-input"
+  action         = "lambda:InvokeFunction"
+  function_name  = aws_lambda_function.producer.function_name
+  principal      = "s3.amazonaws.com"
+  source_arn     = aws_s3_bucket.input.arn
+  source_account = data.aws_caller_identity.current.account_id
 }
 
 resource "aws_s3_bucket_notification" "input_notification" {
@@ -301,6 +295,7 @@ resource "aws_s3_bucket_notification" "input_notification" {
   lambda_function {
     lambda_function_arn = aws_lambda_function.producer.arn
     events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "eventos/"
     filter_suffix       = ".csv"
   }
 
@@ -308,14 +303,13 @@ resource "aws_s3_bucket_notification" "input_notification" {
 }
 
 resource "aws_lambda_event_source_mapping" "consumer_sqs" {
-  event_source_arn                   = aws_sqs_queue.main.arn
-  function_name                      = aws_lambda_function.consumer.arn
-  batch_size                         = 10
-  maximum_batching_window_in_seconds = 1
-  function_response_types            = ["ReportBatchItemFailures"]
+  event_source_arn        = aws_sqs_queue.main.arn
+  function_name           = aws_lambda_function.consumer.arn
+  batch_size              = 1
+  function_response_types = ["ReportBatchItemFailures"]
 
   depends_on = [
-    aws_iam_role_policy_attachment.consumer_sqs,
-    aws_iam_role_policy_attachment.consumer_vpc
+    aws_iam_role_policy_attachment.lambda_sqs,
+    aws_iam_role_policy_attachment.lambda_vpc
   ]
 }
