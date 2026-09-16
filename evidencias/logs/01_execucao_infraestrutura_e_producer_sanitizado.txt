@@ -1,0 +1,554 @@
+~ $ aws ec2 describe-route-tables \
+>   --filters "Name=vpc-id,Values=vpc-0d0668601c7f476f6" \
+>   --query 'RouteTables[].{RouteTable:RouteTableId,Main:Associations[?Main==`true`].Main | [0],Subnets:Associations[].SubnetId,Rotas:Routes[].{Destino:DestinationCidrBlock,Gateway:GatewayId,NAT:NatGatewayId}}' \
+>   --output json
+[
+    {
+        "RouteTable": "rtb-0607f9a74b74dbc95",
+        "Main": true,
+        "Subnets": [],
+        "Rotas": [
+            {
+                "Destino": "172.31.0.0/16",
+                "Gateway": "local",
+                "NAT": null
+            },
+            {
+                "Destino": "0.0.0.0/0",
+                "Gateway": "igw-0b1e447c96ae13eb4",
+                "NAT": null
+            },
+            {
+                "Destino": null,
+                "Gateway": "vpce-0ade26727feef94e3",
+                "NAT": null
+            }
+        ]
+    }
+]
+~ $ aws ec2 describe-security-groups \
+>   --group-ids sg-0aa4d3e5586907430 \
+>   --query 'SecurityGroups[0].{
+>     Nome:GroupName,
+>     ID:GroupId,
+>     VPC:VpcId,
+>     Entrada:IpPermissions,
+>     Saida:IpPermissionsEgress
+>   }' \
+>   --output json
+{
+    "Nome": "default",
+    "ID": "sg-0aa4d3e5586907430",
+    "VPC": "vpc-0d0668601c7f476f6",
+    "Entrada": [
+        {
+            "IpProtocol": "-1",
+            "UserIdGroupPairs": [
+                {
+                    "UserId": "041525320433",
+                    "GroupId": "sg-0aa4d3e5586907430"
+                }
+            ],
+            "IpRanges": [],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+        }
+    ],
+    "Saida": [
+        {
+            "IpProtocol": "-1",
+            "UserIdGroupPairs": [],
+            "IpRanges": [
+                {
+                    "CidrIp": "0.0.0.0/0"
+                }
+            ],
+            "Ipv6Ranges": [],
+            "PrefixListIds": []
+        }
+    ]
+}
+~ $ aws iam put-role-policy \
+>   --role-name atividade6-lambda-role \
+>   --policy-name atividade6-data-access \
+>   --policy-document file://atividade6-data-policy.json
+~ $ aws iam list-role-policies \
+>   --role-name atividade6-lambda-role
+{
+    "PolicyNames": [
+        "atividade6-data-access"
+    ]
+}
+~ $ aws iam get-role-policy \
+>   --role-name atividade6-lambda-role \
+>   --policy-name atividade6-data-access \
+>   --query 'PolicyDocument' \
+>   --output json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ListInputBucket",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::atividade6-input-041525320433-us-east-2"
+            ]
+        },
+        {
+            "Sid": "ReadInputObjects",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::atividade6-input-041525320433-us-east-2/*"
+            ]
+        },
+        {
+            "Sid": "WriteOutputObjects",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::atividade6-output-041525320433-us-east-2/*"
+            ]
+        },
+        {
+            "Sid": "SendMessagesToPipelineQueue",
+            "Effect": "Allow",
+            "Action": [
+                "sqs:SendMessage",
+                "sqs:GetQueueUrl",
+                "sqs:GetQueueAttributes"
+            ],
+            "Resource": [
+                "arn:aws:sqs:us-east-2:041525320433:atividade6-pipeline-queue"
+            ]
+        }
+    ]
+}
+~ $ export REGION="us-east-2"
+~ $ export ACCOUNT_ID="041525320433"
+~ $ 
+~ $ export INPUT_BUCKET="atividade6-input-041525320433-us-east-2"
+~ $ export OUTPUT_BUCKET="atividade6-output-041525320433-us-east-2"
+~ $ 
+~ $ export QUEUE_NAME="atividade6-pipeline-queue"
+~ $ export DLQ_NAME="atividade6-pipeline-dlq"
+~ $ 
+~ $ export PRODUCER_FUNCTION="atividade6-producer"
+~ $ export CONSUMER_FUNCTION="atividade6-consumer"
+~ $ 
+~ $ export LAMBDA_ROLE_NAME="atividade6-lambda-role"
+~ $ export LAMBDA_ROLE_ARN="arn:aws:iam::041525320433:role/atividade6-lambda-role"
+~ $ 
+~ $ export RDS_INSTANCE="atividade6-postgres"
+~ $ export QUEUE_URL=$(aws sqs get-queue-url \
+>   --queue-name "$QUEUE_NAME" \
+>   --query QueueUrl \
+>   --output text)
+~ $ 
+~ $ export QUEUE_ARN=$(aws sqs get-queue-attributes \
+>   --queue-url "$QUEUE_URL" \
+>   --attribute-names QueueArn \
+>   --query 'Attributes.QueueArn' \
+>   --output text)
+~ $ echo "INPUT_BUCKET=$INPUT_BUCKET"
+INPUT_BUCKET=atividade6-input-041525320433-us-east-2
+~ $ echo "OUTPUT_BUCKET=$OUTPUT_BUCKET"
+OUTPUT_BUCKET=atividade6-output-041525320433-us-east-2
+~ $ echo "QUEUE_URL=$QUEUE_URL"
+QUEUE_URL=https://sqs.us-east-2.amazonaws.com/041525320433/atividade6-pipeline-queue
+~ $ echo "QUEUE_ARN=$QUEUE_ARN"
+QUEUE_ARN=arn:aws:sqs:us-east-2:041525320433:atividade6-pipeline-queue
+~ $ echo "LAMBDA_ROLE_ARN=$LAMBDA_ROLE_ARN"
+LAMBDA_ROLE_ARN=arn:aws:iam::041525320433:role/atividade6-lambda-role
+~ $ mkdir -p ~/atividade6/lambda/producer
+~ $ cd ~/atividade6/lambda/producer
+producer $ cat > lambda_function.py <<'PY'
+> import boto3
+> import csv
+> import io
+> import json
+> import os
+> import urllib.parse
+> from datetime import datetime, timezone
+> 
+> s3 = boto3.client("s3")
+> sqs = boto3.client("sqs")
+> 
+> QUEUE_URL = os.environ["QUEUE_URL"]
+> 
+> 
+> def detectar_delimitador(texto):
+>     primeira_linha = texto.splitlines()[0] if texto.splitlines() else ""
+> 
+>     candidatos = [",", ";", "|", "\t"]
+> 
+>     contagens = {
+>         delimitador: primeira_linha.count(delimitador)
+>         for delimitador in candidatos
+>     }
+> 
+>     return max(contagens, key=contagens.get)
+> 
+> 
+> def lambda_handler(event, context):
+> 
+>     total_arquivos = 0
+>     total_mensagens = 0
+> 
+>     for record in event.get("Records", []):
+> 
+>         bucket = record["s3"]["bucket"]["name"]
+> 
+>         key = urllib.parse.unquote_plus(
+>             record["s3"]["object"]["key"]
+>         )
+> 
+>         print(
+>             json.dumps(
+>                 {
+>                     "evento": "arquivo_recebido",
+>                     "bucket": bucket,
+>                     "key": key
+>                 },
+>                 ensure_ascii=False
+>             )
+>         )
+> 
+>         objeto = s3.get_object(
+>             Bucket=bucket,
+>             Key=key
+>         )
+> 
+>         conteudo_bytes = objeto["Body"].read()
+> 
+>         # Tenta UTF-8 primeiro e Latin-1 como contingência.
+>         try:
+>             texto = conteudo_bytes.decode("utf-8-sig")
+>             encoding = "utf-8-sig"
+>         except UnicodeDecodeError:
+>             texto = conteudo_bytes.decode("latin-1")
+>             encoding = "latin-1"
+> 
+>         delimitador = detectar_delimitador(texto)
+> 
+>         leitor = csv.DictReader(
+>             io.StringIO(texto),
+>             delimiter=delimitador
+>         )
+> 
+>         mensagens_arquivo = 0
+> 
+>         for numero_linha, linha in enumerate(leitor, start=2):
+> 
+>             payload = {
+>                 str(chave).strip(): (
+>                     valor.strip()
+>                     if isinstance(valor, str)
+>                     else valor
+>                 )
+>                 for chave, valor in linha.items()
+>                 if chave is not None
+>             }
+> 
+>             mensagem = {
+>                 "tipo": "evento",
+>                 "source_bucket": bucket,
+>                 "source_key": key,
+>                 "row_number": numero_linha,
+>                 "encoding_detectado": encoding,
+>                 "delimitador_detectado": delimitador,
+>                 "payload": payload,
+>                 "produzido_em": datetime.now(
+>                     timezone.utc
+>                 ).isoformat()
+>             }
+> 
+>             resposta = sqs.send_message(
+>                 QueueUrl=QUEUE_URL,
+>                 MessageBody=json.dumps(
+>                     mensagem,
+>                     ensure_ascii=False
+>                 )
+>             )
+> 
+>             mensagens_arquivo += 1
+>             total_mensagens += 1
+> 
+>             print(
+>                 json.dumps(
+>                     {
+>                         "evento": "mensagem_enviada",
+>                         "row_number": numero_linha,
+>                         "message_id": resposta["MessageId"]
+>                     },
+>                     ensure_ascii=False
+>                 )
+>             )
+> 
+>         total_arquivos += 1
+> 
+>         print(
+>             json.dumps(
+>                 {
+>                     "evento": "arquivo_processado",
+>                     "bucket": bucket,
+>                     "key": key,
+>                     "mensagens_enviadas": mensagens_arquivo
+>                 },
+>                 ensure_ascii=False
+>             )
+>         )
+> 
+>     return {
+>         "statusCode": 200,
+>         "arquivos_processados": total_arquivos,
+>         "mensagens_enviadas": total_mensagens
+>     }
+> PY
+producer $ cat lambda_function.py
+import boto3
+import csv
+import io
+import json
+import os
+import urllib.parse
+from datetime import datetime, timezone
+
+s3 = boto3.client("s3")
+sqs = boto3.client("sqs")
+
+QUEUE_URL = os.environ["QUEUE_URL"]
+
+
+def detectar_delimitador(texto):
+    primeira_linha = texto.splitlines()[0] if texto.splitlines() else ""
+
+    candidatos = [",", ";", "|", "\t"]
+
+    contagens = {
+        delimitador: primeira_linha.count(delimitador)
+        for delimitador in candidatos
+    }
+
+    return max(contagens, key=contagens.get)
+
+
+def lambda_handler(event, context):
+
+    total_arquivos = 0
+    total_mensagens = 0
+
+    for record in event.get("Records", []):
+
+        bucket = record["s3"]["bucket"]["name"]
+
+        key = urllib.parse.unquote_plus(
+            record["s3"]["object"]["key"]
+        )
+
+        print(
+            json.dumps(
+                {
+                    "evento": "arquivo_recebido",
+                    "bucket": bucket,
+                    "key": key
+                },
+                ensure_ascii=False
+            )
+        )
+
+        objeto = s3.get_object(
+            Bucket=bucket,
+            Key=key
+        )
+
+        conteudo_bytes = objeto["Body"].read()
+
+        # Tenta UTF-8 primeiro e Latin-1 como contingência.
+        try:
+            texto = conteudo_bytes.decode("utf-8-sig")
+            encoding = "utf-8-sig"
+        except UnicodeDecodeError:
+            texto = conteudo_bytes.decode("latin-1")
+            encoding = "latin-1"
+
+        delimitador = detectar_delimitador(texto)
+
+        leitor = csv.DictReader(
+            io.StringIO(texto),
+            delimiter=delimitador
+        )
+
+        mensagens_arquivo = 0
+
+        for numero_linha, linha in enumerate(leitor, start=2):
+
+            payload = {
+                str(chave).strip(): (
+                    valor.strip()
+                    if isinstance(valor, str)
+                    else valor
+                )
+                for chave, valor in linha.items()
+                if chave is not None
+            }
+
+            mensagem = {
+                "tipo": "evento",
+                "source_bucket": bucket,
+                "source_key": key,
+                "row_number": numero_linha,
+                "encoding_detectado": encoding,
+                "delimitador_detectado": delimitador,
+                "payload": payload,
+                "produzido_em": datetime.now(
+                    timezone.utc
+                ).isoformat()
+            }
+
+            resposta = sqs.send_message(
+                QueueUrl=QUEUE_URL,
+                MessageBody=json.dumps(
+                    mensagem,
+                    ensure_ascii=False
+                )
+            )
+
+            mensagens_arquivo += 1
+            total_mensagens += 1
+
+            print(
+                json.dumps(
+                    {
+                        "evento": "mensagem_enviada",
+                        "row_number": numero_linha,
+                        "message_id": resposta["MessageId"]
+                    },
+                    ensure_ascii=False
+                )
+            )
+
+        total_arquivos += 1
+
+        print(
+            json.dumps(
+                {
+                    "evento": "arquivo_processado",
+                    "bucket": bucket,
+                    "key": key,
+                    "mensagens_enviadas": mensagens_arquivo
+                },
+                ensure_ascii=False
+            )
+        )
+
+    return {
+        "statusCode": 200,
+        "arquivos_processados": total_arquivos,
+        "mensagens_enviadas": total_mensagens
+    }
+producer $ python3 -m py_compile lambda_function.py
+producer $ rm -f atividade6-producer.zip
+producer $ 
+producer $ zip atividade6-producer.zip lambda_function.py
+  adding: lambda_function.py (deflated 69%)
+producer $ ls -lh atividade6-producer.zip
+-rw-r--r--. 1 cloudshell-user cloudshell-user 1.3K Sep 16 16:58 atividade6-producer.zip
+producer $ unzip -l atividade6-producer.zip
+Archive:  atividade6-producer.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+     3565  09-16-2026 16:55   lambda_function.py
+---------                     -------
+     3565                     1 file
+producer $ aws lambda create-function \
+>   --function-name "$PRODUCER_FUNCTION" \
+>   --runtime python3.12 \
+>   --architectures x86_64 \
+>   --handler lambda_function.lambda_handler \
+>   --role "$LAMBDA_ROLE_ARN" \
+>   --zip-file fileb://atividade6-producer.zip \
+>   --timeout 60 \
+>   --memory-size 256 \
+>   --environment "Variables={QUEUE_URL=$QUEUE_URL}" \
+>   --description "Atividade 6 - Producer S3 para SQS" \
+>   --region "$REGION"
+{
+    "FunctionName": "atividade6-producer",
+    "FunctionArn": "arn:aws:lambda:us-east-2:041525320433:function:atividade6-producer",
+    "Runtime": "python3.12",
+    "Role": "arn:aws:iam::041525320433:role/atividade6-lambda-role",
+    "Handler": "lambda_function.lambda_handler",
+    "CodeSize": 1307,
+    "Description": "Atividade 6 - Producer S3 para SQS",
+    "Timeout": 60,
+    "MemorySize": 256,
+    "LastModified": "2026-09-16T16:59:17.498+0000",
+    "CodeSha256": "d+59dpLwRkgjw/mGimyb3Zxnkcl/Fs0HnjfcygVCKag=",
+    "Version": "$LATEST",
+    "Environment": {
+        "Variables": {
+            "QUEUE_URL": "https://sqs.us-east-2.amazonaws.com/041525320433/atividade6-pipeline-queue"
+        }
+    },
+    "TracingConfig": {
+        "Mode": "PassThrough"
+    },
+    "RevisionId": "703acc5e-3cf2-4e9d-b532-8acf91aafe8c",
+    "State": "Pending",
+    "StateReason": "The function is being created.",
+    "StateReasonCode": "Creating",
+    "PackageType": "Zip",
+    "Architectures": [
+        "x86_64"
+    ],
+    "EphemeralStorage": {
+        "Size": 512
+    },
+    "SnapStart": {
+        "ApplyOn": "None",
+        "OptimizationStatus": "Off"
+    },
+    "RuntimeVersionConfig": {
+        "RuntimeVersionArn": "arn:aws:lambda:us-east-2::runtime:36aeb19f3326e129d9f096dea0a3c6a9ca8dce2610e62d2b2060747602d863ae"
+    },
+    "LoggingConfig": {
+        "LogFormat": "Text",
+        "LogGroup": "/aws/lambda/atividade6-producer"
+    }
+}
+producer $ aws lambda wait function-active-v2 \
+>   --function-name "$PRODUCER_FUNCTION"
+producer $ aws lambda get-function-configuration \
+>   --function-name "$PRODUCER_FUNCTION" \
+>   --query '{
+>     Nome:FunctionName,
+>     Estado:State,
+>     Runtime:Runtime,
+>     Handler:Handler,
+>     Timeout:Timeout,
+>     Memoria:MemorySize,
+>     Role:Role,
+>     Variaveis:Environment.Variables
+>   }' \
+>   --output json
+{
+    "Nome": "atividade6-producer",
+    "Estado": "Active",
+    "Runtime": "python3.12",
+    "Handler": "lambda_function.lambda_handler",
+    "Timeout": 60,
+    "Memoria": 256,
+    "Role": "arn:aws:iam::041525320433:role/atividade6-lambda-role",
+    "Variaveis": {
+        "QUEUE_URL": "https://sqs.us-east-2.amazonaws.com/041525320433/atividade6-pipeline-queue"
+    }
+}
+producer $ 

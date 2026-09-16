@@ -1,0 +1,345 @@
+~ $ cd ~/atividade6/lambda/consumer
+consumer $ python3 - <<'PY'
+> from pathlib import Path
+> 
+> arquivo = Path("lambda_function.py")
+> texto = arquivo.read_text()
+> 
+> antigo = '''        return {
+>             "statusCode": 200,
+>             "processados": len(resultados)
+>         }
+> '''
+> 
+> novo = '''        return {
+>             "batchItemFailures": []
+>         }
+> '''
+> 
+> if antigo not in texto:
+>     print("ATENCAO: trecho antigo nao encontrado.")
+> else:
+>     arquivo.write_text(texto.replace(antigo, novo))
+>     print("Consumer ajustada para ReportBatchItemFailures.")
+> PY
+Consumer ajustada para ReportBatchItemFailures.
+consumer $ python3 -m py_compile lambda_function.py
+consumer $ cp lambda_function.py package/
+consumer $ 
+consumer $ cd package
+package $ 
+package $ zip -r -q ../atividade6-consumer.zip .
+package $ 
+package $ cd ..
+consumer $ aws lambda update-function-code \
+>   --function-name atividade6-consumer \
+>   --zip-file fileb://atividade6-consumer.zip
+{
+    "FunctionName": "atividade6-consumer",
+    "FunctionArn": "arn:aws:lambda:us-east-2:041525320433:function:atividade6-consumer",
+    "Runtime": "python3.12",
+    "Role": "arn:aws:iam::041525320433:role/atividade6-lambda-role",
+    "Handler": "lambda_function.lambda_handler",
+    "CodeSize": 875688,
+    "Description": "Atividade 6 - Consumer SQS com enriquecimento PostgreSQL e gravacao S3",
+    "Timeout": 60,
+    "MemorySize": 256,
+    "LastModified": "2026-09-16T18:37:56.000+0000",
+    "CodeSha256": "PIQWcoZZAwwGqNyskikG7I6l8wGQuwc/wT3MnueIoNM=",
+    "Version": "$LATEST",
+    "VpcConfig": {
+        "SubnetIds": [
+            "subnet-089e6ed4ad110df78",
+            "subnet-064737ae0fa826b47",
+            "subnet-02243f0a6c7201fd9"
+        ],
+        "SecurityGroupIds": [
+            "sg-0aa4d3e5586907430"
+        ],
+        "VpcId": "vpc-0d0668601c7f476f6",
+        "Ipv6AllowedForDualStack": false
+    },
+    "Environment": {
+        "Variables": {
+            "DB_PORT": "5432",
+            "DB_USER": "postgres",
+            "OUTPUT_BUCKET": "atividade6-output-041525320433-us-east-2",
+            "DB_NAME": "postgres",
+            "DB_HOST": "atividade6-postgres.cjgaeoimin5x.us-east-2.rds.amazonaws.com",
+            "DB_PASSWORD": "***REDACTED***"
+        }
+    },
+    "TracingConfig": {
+        "Mode": "PassThrough"
+    },
+    "RevisionId": "edfd4533-41e6-47d9-8802-7ad2011539d1",
+    "State": "Active",
+    "LastUpdateStatus": "InProgress",
+    "LastUpdateStatusReason": "The function is being created.",
+    "LastUpdateStatusReasonCode": "Creating",
+    "PackageType": "Zip",
+    "Architectures": [
+        "x86_64"
+    ],
+    "EphemeralStorage": {
+        "Size": 512
+    },
+    "SnapStart": {
+        "ApplyOn": "None",
+        "OptimizationStatus": "Off"
+    },
+    "RuntimeVersionConfig": {
+        "RuntimeVersionArn": "arn:aws:lambda:us-east-2::runtime:36aeb19f3326e129d9f096dea0a3c6a9ca8dce2610e62d2b2060747602d863ae"
+    },
+    "LoggingConfig": {
+        "LogFormat": "Text",
+        "LogGroup": "/aws/lambda/atividade6-consumer"
+    }
+}
+consumer $ aws lambda wait function-updated-v2 \
+>   --function-name atividade6-consumer
+consumer $ aws lambda get-function-configuration \
+>   --function-name atividade6-consumer \
+>   --query '{Estado:State,Atualizacao:LastUpdateStatus}' \
+>   --output json
+{
+    "Estado": "Active",
+    "Atualizacao": "Successful"
+}
+consumer $ export OUTPUT_BUCKET="atividade6-output-041525320433-us-east-2"
+consumer $ export INPUT_BUCKET="atividade6-input-041525320433-us-east-2"
+consumer $ 
+consumer $ ANTES=$(aws s3 ls \
+>   "s3://$OUTPUT_BUCKET/processed/" \
+>   --recursive 2>/dev/null | wc -l)
+consumer $ 
+consumer $ echo "Arquivos no Output antes do teste: $ANTES"
+Arquivos no Output antes do teste: 1
+consumer $ mkdir -p ~/atividade6/teste
+consumer $ cd ~/atividade6/teste
+teste $ cat > eventos-e2e.csv <<'EOF'
+> protocolo,cnpj,valor
+> REC-E2E-001,11.111.111/0001-91,150.00
+> REC-E2E-002,22.222.222/0001-82,320.50
+> REC-E2E-003,99.999.999/0001-99,80.00
+> EOF
+teste $ cat eventos-e2e.csv
+protocolo,cnpj,valor
+REC-E2E-001,11.111.111/0001-91,150.00
+REC-E2E-002,22.222.222/0001-82,320.50
+REC-E2E-003,99.999.999/0001-99,80.00
+teste $ TESTE_ID=$(date +%Y%m%d-%H%M%S)
+teste $ 
+teste $ echo "$TESTE_ID"
+20260916-183840
+teste $ aws s3 cp \
+>   eventos-e2e.csv \
+>   "s3://$INPUT_BUCKET/eventos/eventos-$TESTE_ID.csv"
+upload: ./eventos-e2e.csv to s3://atividade6-input-041525320433-us-east-2/eventos/eventos-20260916-183840.csv
+teste $ aws logs tail \
+>   "/aws/lambda/atividade6-producer" \
+>   --since 10m \
+>   --format short
+2026-09-16T18:38:47 INIT_START Runtime Version: python:3.12.mainlinev2.v43      Runtime Version ARN: arn:aws:lambda:us-east-2::runtime:36aeb19f3326e129d9f096dea0a3c6a9ca8dce2610e62d2b2060747602d863ae
+2026-09-16T18:38:47 START RequestId: 43f9a0dc-4568-4f5d-acba-cbb8ed85a842 Version: $LATEST
+2026-09-16T18:38:47 {"evento": "arquivo_recebido", "bucket": "atividade6-input-041525320433-us-east-2", "key": "eventos/eventos-20260916-183840.csv"}
+2026-09-16T18:38:48 {"evento": "mensagem_enviada", "row_number": 2, "message_id": "b2472b2b-9757-4711-b317-619d0131023c"}
+2026-09-16T18:38:48 {"evento": "mensagem_enviada", "row_number": 3, "message_id": "87b4ea61-1a4d-4045-bf2b-796169049f78"}
+2026-09-16T18:38:48 {"evento": "mensagem_enviada", "row_number": 4, "message_id": "9c4e2718-ec29-4c6c-a505-875de32b550c"}
+2026-09-16T18:38:48 {"evento": "arquivo_processado", "bucket": "atividade6-input-041525320433-us-east-2", "key": "eventos/eventos-20260916-183840.csv", "mensagens_enviadas": 3}
+2026-09-16T18:38:48 END RequestId: 43f9a0dc-4568-4f5d-acba-cbb8ed85a842
+2026-09-16T18:38:48 REPORT RequestId: 43f9a0dc-4568-4f5d-acba-cbb8ed85a842      Duration: 304.98 ms     Billed Duration: 844 ms Memory Size: 256 MB     Max Memory Used: 97 MB  Init Duration: 538.67 ms
+teste $ aws logs tail \
+>   "/aws/lambda/atividade6-consumer" \
+>   --since 10m \
+>   --format short
+2026-09-16T18:38:48 INIT_START Runtime Version: python:3.12.mainlinev2.v43      Runtime Version ARN: arn:aws:lambda:us-east-2::runtime:36aeb19f3326e129d9f096dea0a3c6a9ca8dce2610e62d2b2060747602d863ae
+2026-09-16T18:38:48 INIT_START Runtime Version: python:3.12.mainlinev2.v43      Runtime Version ARN: arn:aws:lambda:us-east-2::runtime:36aeb19f3326e129d9f096dea0a3c6a9ca8dce2610e62d2b2060747602d863ae
+2026-09-16T18:38:48 INIT_START Runtime Version: python:3.12.mainlinev2.v43      Runtime Version ARN: arn:aws:lambda:us-east-2::runtime:36aeb19f3326e129d9f096dea0a3c6a9ca8dce2610e62d2b2060747602d863ae
+2026-09-16T18:38:49 START RequestId: e801b406-a156-5d74-b0e4-d722453b3a24 Version: $LATEST
+2026-09-16T18:38:49 START RequestId: 7483cd09-ef59-590f-ad87-ae2d0b3434a3 Version: $LATEST
+2026-09-16T18:38:49 START RequestId: 188c60de-8888-509f-a17d-03fa6ce58334 Version: $LATEST
+2026-09-16T18:38:49 {"evento": "processado", "protocolo": "REC-E2E-002", "cnpj_norm": "22222222000182", "enriquecimento_encontrado": true, "output_key": "processed/2026/09/16/REC-E2E-002-eb1ae8a953454cb3ad0826ebd00b3f46.json"}
+2026-09-16T18:38:49 END RequestId: e801b406-a156-5d74-b0e4-d722453b3a24
+2026-09-16T18:38:49 REPORT RequestId: e801b406-a156-5d74-b0e4-d722453b3a24      Duration: 350.75 ms     Billed Duration: 1039 ms        Memory Size: 256 MB     Max Memory Used: 104 MB Init Duration: 687.40 ms
+2026-09-16T18:38:49 {"evento": "processado", "protocolo": "REC-E2E-003", "cnpj_norm": "99999999000199", "enriquecimento_encontrado": false, "output_key": "processed/2026/09/16/REC-E2E-003-26490fa4b592426788f90553413c99e2.json"}
+2026-09-16T18:38:49 END RequestId: 7483cd09-ef59-590f-ad87-ae2d0b3434a3
+2026-09-16T18:38:49 REPORT RequestId: 7483cd09-ef59-590f-ad87-ae2d0b3434a3      Duration: 381.57 ms     Billed Duration: 1101 ms        Memory Size: 256 MB     Max Memory Used: 104 MB Init Duration: 718.82 ms
+2026-09-16T18:38:49 {"evento": "processado", "protocolo": "REC-E2E-001", "cnpj_norm": "11111111000191", "enriquecimento_encontrado": true, "output_key": "processed/2026/09/16/REC-E2E-001-d8debbaf25dc47c9a557df400d0258aa.json"}
+2026-09-16T18:38:49 END RequestId: 188c60de-8888-509f-a17d-03fa6ce58334
+2026-09-16T18:38:49 REPORT RequestId: 188c60de-8888-509f-a17d-03fa6ce58334      Duration: 372.82 ms     Billed Duration: 1153 ms        Memory Size: 256 MB     Max Memory Used: 104 MB Init Duration: 779.47 ms
+teste $ QUEUE_URL=$(aws sqs get-queue-url \
+>   --queue-name atividade6-pipeline-queue \
+>   --query QueueUrl \
+>   --output text)
+
+teste $ 
+teste $ aws sqs get-queue-attributes \
+>   --queue-url "$QUEUE_URL" \
+>   --attribute-names \
+>     ApproximateNumberOfMessages \
+>     ApproximateNumberOfMessagesNotVisible \
+>   --output json
+{
+    "Attributes": {
+        "ApproximateNumberOfMessages": "0",
+        "ApproximateNumberOfMessagesNotVisible": "0"
+    }
+}
+teste $ QUEUE_URL=$(aws sqs get-queue-url \
+>   --queue-name atividade6-pipeline-queue \
+>   --query QueueUrl \
+>   --output text)
+
+teste $ 
+teste $ aws sqs get-queue-attributes \
+>   --queue-url "$QUEUE_URL" \
+>   --attribute-names \
+>     ApproximateNumberOfMessages \
+>     ApproximateNumberOfMessagesNotVisible \
+>   --output json
+{
+    "Attributes": {
+        "ApproximateNumberOfMessages": "0",
+        "ApproximateNumberOfMessagesNotVisible": "0"
+    }
+}
+teste $ DLQ_URL=$(aws sqs get-queue-url \
+>   --queue-name atividade6-pipeline-dlq \
+>   --query QueueUrl \
+>   --output text)
+
+teste $ 
+teste $ aws sqs get-queue-attributes \
+>   --queue-url "$DLQ_URL" \
+>   --attribute-names ApproximateNumberOfMessages \
+>   --output json
+{
+    "Attributes": {
+        "ApproximateNumberOfMessages": "0"
+    }
+}
+teste $ DEPOIS=$(aws s3 ls \
+>   "s3://$OUTPUT_BUCKET/processed/" \
+>   --recursive | wc -l)
+
+teste $ 
+teste $ echo "Antes : $ANTES"
+Antes : 1
+teste $ echo "Depois: $DEPOIS"
+Depois: 4
+teste $ echo "Novos : $((DEPOIS-ANTES))"
+Novos : 3
+teste $ aws s3api list-objects-v2 \
+>   --bucket "$OUTPUT_BUCKET" \
+>   --prefix processed/ \
+>   --query 'sort_by(Contents,&LastModified)[-3:].{Arquivo:Key,Data:LastModified,Tamanho:Size}' \
+>   --output table
+--------------------------------------------------------------------------------------------------------------------
+|                                                   ListObjectsV2                                                  |
++-------------------------------------------------------------------------+-----------------------------+----------+
+|                                 Arquivo                                 |            Data             | Tamanho  |
++-------------------------------------------------------------------------+-----------------------------+----------+
+|  processed/2026/09/16/REC-E2E-001-d8debbaf25dc47c9a557df400d0258aa.json |  2026-09-16T18:38:50+00:00  |  710     |
+|  processed/2026/09/16/REC-E2E-002-eb1ae8a953454cb3ad0826ebd00b3f46.json |  2026-09-16T18:38:50+00:00  |  710     |
+|  processed/2026/09/16/REC-E2E-003-26490fa4b592426788f90553413c99e2.json |  2026-09-16T18:38:50+00:00  |  688     |
++-------------------------------------------------------------------------+-----------------------------+----------+
+teste $ aws s3api list-objects-v2 \
+>   --bucket "$OUTPUT_BUCKET" \
+>   --prefix processed/ \
+>   --query 'sort_by(Contents,&LastModified)[-3:].Key' \
+>   --output text |
+> tr '\t' '\n' |
+> while read KEY
+> do
+>     echo
+>     echo "=================================================="
+>     echo "$KEY"
+>     echo "=================================================="
+> 
+>     aws s3 cp \
+>       "s3://$OUTPUT_BUCKET/$KEY" \
+>       -
+> done
+
+==================================================
+processed/2026/09/16/REC-E2E-001-d8debbaf25dc47c9a557df400d0258aa.json
+==================================================
+{
+  "protocolo": "REC-E2E-001",
+  "cnpj": "11.111.111/0001-91",
+  "cnpj_norm": "11111111000191",
+  "valor": "150.00",
+  "enriquecimento_encontrado": true,
+  "categoria": "Servicos",
+  "descricao": "Empresa Exemplo A",
+  "source_message": {
+    "tipo": "evento",
+    "source_bucket": "atividade6-input-041525320433-us-east-2",
+    "source_key": "eventos/eventos-20260916-183840.csv",
+    "row_number": 2,
+    "encoding_detectado": "utf-8-sig",
+    "delimitador_detectado": ",",
+    "payload": {
+      "protocolo": "REC-E2E-001",
+      "cnpj": "11.111.111/0001-91",
+      "valor": "150.00"
+    },
+    "produzido_em": "2026-09-16T18:38:48.109106+00:00"
+  },
+  "processado_em": "2026-09-16T18:38:49.419554+00:00"
+}
+==================================================
+processed/2026/09/16/REC-E2E-002-eb1ae8a953454cb3ad0826ebd00b3f46.json
+==================================================
+{
+  "protocolo": "REC-E2E-002",
+  "cnpj": "22.222.222/0001-82",
+  "cnpj_norm": "22222222000182",
+  "valor": "320.50",
+  "enriquecimento_encontrado": true,
+  "categoria": "Comercio",
+  "descricao": "Empresa Exemplo B",
+  "source_message": {
+    "tipo": "evento",
+    "source_bucket": "atividade6-input-041525320433-us-east-2",
+    "source_key": "eventos/eventos-20260916-183840.csv",
+    "row_number": 3,
+    "encoding_detectado": "utf-8-sig",
+    "delimitador_detectado": ",",
+    "payload": {
+      "protocolo": "REC-E2E-002",
+      "cnpj": "22.222.222/0001-82",
+      "valor": "320.50"
+    },
+    "produzido_em": "2026-09-16T18:38:48.232104+00:00"
+  },
+  "processado_em": "2026-09-16T18:38:49.306581+00:00"
+}
+==================================================
+processed/2026/09/16/REC-E2E-003-26490fa4b592426788f90553413c99e2.json
+==================================================
+{
+  "protocolo": "REC-E2E-003",
+  "cnpj": "99.999.999/0001-99",
+  "cnpj_norm": "99999999000199",
+  "valor": "80.00",
+  "enriquecimento_encontrado": false,
+  "categoria": null,
+  "descricao": null,
+  "source_message": {
+    "tipo": "evento",
+    "source_bucket": "atividade6-input-041525320433-us-east-2",
+    "source_key": "eventos/eventos-20260916-183840.csv",
+    "row_number": 4,
+    "encoding_detectado": "utf-8-sig",
+    "delimitador_detectado": ",",
+    "payload": {
+      "protocolo": "REC-E2E-003",
+      "cnpj": "99.999.999/0001-99",
+      "valor": "80.00"
+    },
+    "produzido_em": "2026-09-16T18:38:48.254473+00:00"
+  },
+  "processado_em": "2026-09-16T18:38:49.367941+00:00"
+}teste $ 

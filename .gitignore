@@ -1,0 +1,32 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+infra/tfplan
+infra/terraform.tfvars
+.build/
+dist/*.zip
+__pycache__/
+*.pyc
+.DS_Store
+
+# Arquivos temporários do Microsoft Office
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# Credenciais e variáveis de ambiente
+.env
+.env.*
+*environment*.json
+credentials
+credentials.*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Sistema
+.DS_Store
+Thumbs.db

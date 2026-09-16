@@ -1,0 +1,15 @@
+﻿ID;Componente;Evidência;Tipo;Resultado/Objeto;Status
+EV-01;S3 Input;Bucket de entrada criado e bloqueado para acesso público;Configuração/CLI;atividade6-input-041525320433-us-east-2;Validado
+EV-02;IAM;Role Lambda com políticas básicas, SQS, VPC e política inline de dados;Configuração/CLI;atividade6-lambda-role;Validado
+EV-03;Lambda Producer;Função ativa em Python 3.12 e configurada com a URL da fila;Configuração/CLI;atividade6-producer;Validado
+EV-04;S3 → Lambda;Notificação ObjectCreated para prefixo eventos/ e sufixo .csv;Integração;atividade6-eventos-csv;Validado
+EV-05;SQS;Fila principal com DLQ e maxReceiveCount=5;Configuração/CLI;atividade6-pipeline-queue;Validado
+EV-06;SQS → Lambda;Event source mapping Enabled, BatchSize=1;Integração;UUID 996c27fd-54e5-4ea4-8528-fa336f0ba2b9;Validado
+EV-07;Lambda Consumer;Função ativa em Python 3.12, VPC correta e acesso ao RDS;Configuração/CLI;atividade6-consumer;Validado
+EV-08;RDS PostgreSQL;Instância disponível e acessível pela Consumer na porta 5432;Configuração/execução;atividade6-postgres;Validado
+EV-09;Teste E2E - Producer;Upload do CSV gerou 3 mensagens SQS;Log CloudWatch;mensagens_enviadas=3;Validado
+EV-10;Teste E2E - Consumer;3 registros processados pela Consumer;Log CloudWatch;REC-E2E-001/002/003;Validado
+EV-11;Enriquecimento;"Registros 001 e 002 enriquecidos; 003 sem correspondência";Resultado S3;true/true/false;Validado
+EV-12;Fila principal;0 mensagens disponíveis e 0 em voo após o teste;Métrica SQS;0/0;Validado
+EV-13;DLQ;0 mensagens após o teste;Métrica SQS;0;Validado
+EV-14;S3 Output;Quantidade de arquivos processados passou de 1 para 4 (+3);Resultado S3;Novos=3;Validado

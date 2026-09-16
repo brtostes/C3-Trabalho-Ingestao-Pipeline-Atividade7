@@ -1,0 +1,325 @@
+consumer $ python3 -m py_compile lambda_function.py
+consumer $ rm -rf package
+consumer $ mkdir package
+consumer $ python3 -m pip install \
+>   pg8000 \
+>   --target package
+Collecting pg8000
+  Downloading pg8000-1.31.5-py3-none-any.whl.metadata (88 kB)
+Collecting python-dateutil>=2.8.2 (from pg8000)
+  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting scramp>=1.4.5 (from pg8000)
+  Downloading scramp-1.4.17-py3-none-any.whl.metadata (22 kB)
+Collecting six>=1.5 (from python-dateutil>=2.8.2->pg8000)
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting asn1crypto>=1.5.1 (from scramp>=1.4.5->pg8000)
+  Downloading asn1crypto-1.5.1-py2.py3-none-any.whl.metadata (13 kB)
+Downloading pg8000-1.31.5-py3-none-any.whl (57 kB)
+Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Downloading scramp-1.4.17-py3-none-any.whl (16 kB)
+Downloading asn1crypto-1.5.1-py2.py3-none-any.whl (105 kB)
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Installing collected packages: asn1crypto, six, scramp, python-dateutil, pg8000
+Successfully installed asn1crypto-1.5.1 pg8000-1.31.5 python-dateutil-2.9.0.post0 scramp-1.4.17 six-1.17.0
+
+[notice] A new release of pip is available: 26.1.2 -> 26.2.1
+[notice] To update, run: pip install --upgrade pip
+consumer $ ls package | head
+asn1crypto
+asn1crypto-1.5.1.dist-info
+dateutil
+pg8000
+pg8000-1.31.5.dist-info
+__pycache__
+python_dateutil-2.9.0.post0.dist-info
+scramp
+scramp-1.4.17.dist-info
+six-1.17.0.dist-info
+consumer $ cp lambda_function.py package/
+consumer $ cd package
+package $ 
+package $ zip -r ../atividade6-consumer.zip .
+  adding: pg8000-1.31.5.dist-info/ (stored 0%)
+  adding: pg8000-1.31.5.dist-info/METADATA (deflated 75%)
+  adding: pg8000-1.31.5.dist-info/RECORD (deflated 50%)
+  adding: pg8000-1.31.5.dist-info/INSTALLER (stored 0%)
+  adding: pg8000-1.31.5.dist-info/WHEEL (deflated 1%)
+  adding: pg8000-1.31.5.dist-info/licenses/ (stored 0%)
+  adding: pg8000-1.31.5.dist-info/licenses/LICENSE (deflated 48%)
+  adding: pg8000-1.31.5.dist-info/REQUESTED (stored 0%)
+  adding: six.py (deflated 76%)
+  adding: pg8000/ (stored 0%)
+  adding: pg8000/dbapi.py (deflated 77%)
+  adding: pg8000/native.py (deflated 70%)
+  adding: pg8000/legacy.py (deflated 75%)
+  adding: pg8000/types.py (deflated 76%)
+  adding: pg8000/__pycache__/ (stored 0%)
+  adding: pg8000/__pycache__/converters.cpython-313.pyc (deflated 57%)
+  adding: pg8000/__pycache__/native.cpython-313.pyc (deflated 53%)
+  adding: pg8000/__pycache__/types.cpython-313.pyc (deflated 50%)
+  adding: pg8000/__pycache__/__init__.cpython-313.pyc (deflated 45%)
+  adding: pg8000/__pycache__/legacy.cpython-313.pyc (deflated 57%)
+  adding: pg8000/__pycache__/core.cpython-313.pyc (deflated 57%)
+  adding: pg8000/__pycache__/dbapi.cpython-313.pyc (deflated 61%)
+  adding: pg8000/__pycache__/exceptions.cpython-313.pyc (deflated 56%)
+  adding: pg8000/converters.py (deflated 75%)
+  adding: pg8000/__init__.py (deflated 61%)
+  adding: pg8000/core.py (deflated 75%)
+  adding: pg8000/exceptions.py (deflated 66%)
+  adding: __pycache__/ (stored 0%)
+  adding: __pycache__/six.cpython-313.pyc (deflated 57%)
+  adding: python_dateutil-2.9.0.post0.dist-info/ (stored 0%)
+  adding: python_dateutil-2.9.0.post0.dist-info/top_level.txt (stored 0%)
+  adding: python_dateutil-2.9.0.post0.dist-info/METADATA (deflated 63%)
+  adding: python_dateutil-2.9.0.post0.dist-info/RECORD (deflated 57%)
+  adding: python_dateutil-2.9.0.post0.dist-info/INSTALLER (stored 0%)
+  adding: python_dateutil-2.9.0.post0.dist-info/zip-safe (stored 0%)
+  adding: python_dateutil-2.9.0.post0.dist-info/WHEEL (deflated 14%)
+  adding: python_dateutil-2.9.0.post0.dist-info/LICENSE (deflated 52%)
+  adding: asn1crypto/ (stored 0%)
+  adding: asn1crypto/_types.py (deflated 55%)
+  adding: asn1crypto/tsp.py (deflated 76%)
+  adding: asn1crypto/crl.py (deflated 79%)
+  adding: asn1crypto/_errors.py (deflated 50%)
+  adding: asn1crypto/_iri.py (deflated 70%)
+  adding: asn1crypto/version.py (deflated 21%)
+  adding: asn1crypto/parser.py (deflated 73%)
+  adding: asn1crypto/cms.py (deflated 81%)
+  adding: asn1crypto/pdf.py (deflated 66%)
+  adding: asn1crypto/_inet.py (deflated 74%)
+  adding: asn1crypto/util.py (deflated 79%)
+  adding: asn1crypto/_ordereddict.py (deflated 64%)
+  adding: asn1crypto/csr.py (deflated 67%)
+  adding: asn1crypto/__pycache__/ (stored 0%)
+  adding: asn1crypto/__pycache__/ocsp.cpython-313.pyc (deflated 66%)
+  adding: asn1crypto/__pycache__/_int.cpython-313.pyc (deflated 33%)
+  adding: asn1crypto/__pycache__/_teletex_codec.cpython-313.pyc (deflated 51%)
+  adding: asn1crypto/__pycache__/version.cpython-313.pyc (deflated 17%)
+  adding: asn1crypto/__pycache__/_types.cpython-313.pyc (deflated 35%)
+  adding: asn1crypto/__pycache__/x509.cpython-313.pyc (deflated 63%)
+  adding: asn1crypto/__pycache__/_iri.cpython-313.pyc (deflated 49%)
+  adding: asn1crypto/__pycache__/pkcs12.cpython-313.pyc (deflated 54%)
+  adding: asn1crypto/__pycache__/algos.cpython-313.pyc (deflated 63%)
+  adding: asn1crypto/__pycache__/_ordereddict.cpython-313.pyc (deflated 48%)
+  adding: asn1crypto/__pycache__/pdf.cpython-313.pyc (deflated 51%)
+  adding: asn1crypto/__pycache__/_errors.cpython-313.pyc (deflated 35%)
+  adding: asn1crypto/__pycache__/cms.cpython-313.pyc (deflated 66%)
+  adding: asn1crypto/__pycache__/keys.cpython-313.pyc (deflated 63%)
+  adding: asn1crypto/__pycache__/__init__.cpython-313.pyc (deflated 45%)
+  adding: asn1crypto/__pycache__/crl.cpython-313.pyc (deflated 62%)
+  adding: asn1crypto/__pycache__/pem.cpython-313.pyc (deflated 54%)
+  adding: asn1crypto/__pycache__/_inet.cpython-313.pyc (deflated 53%)
+  adding: asn1crypto/__pycache__/core.cpython-313.pyc (deflated 66%)
+  adding: asn1crypto/__pycache__/tsp.cpython-313.pyc (deflated 61%)
+  adding: asn1crypto/__pycache__/util.cpython-313.pyc (deflated 62%)
+  adding: asn1crypto/__pycache__/parser.cpython-313.pyc (deflated 55%)
+  adding: asn1crypto/__pycache__/csr.cpython-313.pyc (deflated 55%)
+  adding: asn1crypto/x509.py (deflated 80%)
+  adding: asn1crypto/algos.py (deflated 82%)
+  adding: asn1crypto/__init__.py (deflated 65%)
+  adding: asn1crypto/_int.py (deflated 47%)
+  adding: asn1crypto/pkcs12.py (deflated 67%)
+  adding: asn1crypto/pem.py (deflated 71%)
+  adding: asn1crypto/core.py (deflated 83%)
+  adding: asn1crypto/_teletex_codec.py (deflated 77%)
+  adding: asn1crypto/ocsp.py (deflated 83%)
+  adding: asn1crypto/keys.py (deflated 81%)
+  adding: dateutil/ (stored 0%)
+  adding: dateutil/tz/ (stored 0%)
+  adding: dateutil/tz/win.py (deflated 69%)
+  adding: dateutil/tz/tz.py (deflated 75%)
+  adding: dateutil/tz/_factories.py (deflated 76%)
+  adding: dateutil/tz/__pycache__/ (stored 0%)
+  adding: dateutil/tz/__pycache__/tz.cpython-313.pyc (deflated 58%)
+  adding: dateutil/tz/__pycache__/_factories.cpython-313.pyc (deflated 56%)
+  adding: dateutil/tz/__pycache__/__init__.cpython-313.pyc (deflated 29%)
+  adding: dateutil/tz/__pycache__/_common.cpython-313.pyc (deflated 54%)
+  adding: dateutil/tz/__pycache__/win.cpython-313.pyc (deflated 54%)
+  adding: dateutil/tz/__init__.py (deflated 46%)
+  adding: dateutil/tz/_common.py (deflated 74%)
+  adding: dateutil/easter.py (deflated 53%)
+  adding: dateutil/_version.py (deflated 30%)
+  adding: dateutil/parser/ (stored 0%)
+  adding: dateutil/parser/_parser.py (deflated 76%)
+  adding: dateutil/parser/__pycache__/ (stored 0%)
+  adding: dateutil/parser/__pycache__/_parser.cpython-313.pyc (deflated 58%)
+  adding: dateutil/parser/__pycache__/isoparser.cpython-313.pyc (deflated 51%)
+  adding: dateutil/parser/__pycache__/__init__.cpython-313.pyc (deflated 44%)
+  adding: dateutil/parser/__init__.py (deflated 66%)
+  adding: dateutil/parser/isoparser.py (deflated 71%)
+  adding: dateutil/tzwin.py (deflated 8%)
+  adding: dateutil/__pycache__/ (stored 0%)
+  adding: dateutil/__pycache__/utils.cpython-313.pyc (deflated 45%)
+  adding: dateutil/__pycache__/tzwin.cpython-313.pyc (deflated 15%)
+  adding: dateutil/__pycache__/rrule.cpython-313.pyc (deflated 56%)
+  adding: dateutil/__pycache__/__init__.cpython-313.pyc (deflated 30%)
+  adding: dateutil/__pycache__/_common.cpython-313.pyc (deflated 43%)
+  adding: dateutil/__pycache__/relativedelta.cpython-313.pyc (deflated 62%)
+  adding: dateutil/__pycache__/_version.cpython-313.pyc (deflated 23%)
+  adding: dateutil/__pycache__/easter.cpython-313.pyc (deflated 37%)
+  adding: dateutil/__init__.py (deflated 45%)
+  adding: dateutil/_common.py (deflated 61%)
+  adding: dateutil/utils.py (deflated 58%)
+  adding: dateutil/rrule.py (deflated 77%)
+  adding: dateutil/zoneinfo/ (stored 0%)
+  adding: dateutil/zoneinfo/__pycache__/ (stored 0%)
+  adding: dateutil/zoneinfo/__pycache__/rebuild.cpython-313.pyc (deflated 42%)
+  adding: dateutil/zoneinfo/__pycache__/__init__.cpython-313.pyc (deflated 52%)
+  adding: dateutil/zoneinfo/dateutil-zoneinfo.tar.gz (deflated 3%)
+  adding: dateutil/zoneinfo/__init__.py (deflated 65%)
+  adding: dateutil/zoneinfo/rebuild.py (deflated 56%)
+  adding: dateutil/relativedelta.py (deflated 77%)
+  adding: lambda_function.py (deflated 67%)
+  adding: scramp/ (stored 0%)
+  adding: scramp/__pycache__/ (stored 0%)
+  adding: scramp/__pycache__/utils.cpython-313.pyc (deflated 44%)
+  adding: scramp/__pycache__/__init__.cpython-313.pyc (deflated 23%)
+  adding: scramp/__pycache__/core.cpython-313.pyc (deflated 57%)
+  adding: scramp/__init__.py (deflated 46%)
+  adding: scramp/core.py (deflated 78%)
+  adding: scramp/utils.py (deflated 60%)
+  adding: scramp-1.4.17.dist-info/ (stored 0%)
+  adding: scramp-1.4.17.dist-info/METADATA (deflated 71%)
+  adding: scramp-1.4.17.dist-info/RECORD (deflated 42%)
+  adding: scramp-1.4.17.dist-info/INSTALLER (stored 0%)
+  adding: scramp-1.4.17.dist-info/WHEEL (deflated 2%)
+  adding: scramp-1.4.17.dist-info/licenses/ (stored 0%)
+  adding: scramp-1.4.17.dist-info/licenses/LICENSE (deflated 40%)
+  adding: six-1.17.0.dist-info/ (stored 0%)
+  adding: six-1.17.0.dist-info/top_level.txt (stored 0%)
+  adding: six-1.17.0.dist-info/METADATA (deflated 54%)
+  adding: six-1.17.0.dist-info/RECORD (deflated 35%)
+  adding: six-1.17.0.dist-info/INSTALLER (stored 0%)
+  adding: six-1.17.0.dist-info/WHEEL (deflated 12%)
+  adding: six-1.17.0.dist-info/LICENSE (deflated 41%)
+  adding: asn1crypto-1.5.1.dist-info/ (stored 0%)
+  adding: asn1crypto-1.5.1.dist-info/top_level.txt (stored 0%)
+  adding: asn1crypto-1.5.1.dist-info/METADATA (deflated 67%)
+  adding: asn1crypto-1.5.1.dist-info/RECORD (deflated 57%)
+  adding: asn1crypto-1.5.1.dist-info/INSTALLER (stored 0%)
+  adding: asn1crypto-1.5.1.dist-info/WHEEL (deflated 14%)
+  adding: asn1crypto-1.5.1.dist-info/LICENSE (deflated 40%)
+package $ 
+package $ cd ..
+consumer $ ls -lh atividade6-consumer.zip
+-rw-r--r--. 1 cloudshell-user cloudshell-user 856K Sep 16 17:01 atividade6-consumer.zip
+consumer $ unzip -l atividade6-consumer.zip | head -20
+Archive:  atividade6-consumer.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  09-16-2026 17:01   pg8000-1.31.5.dist-info/
+    88793  09-16-2026 17:01   pg8000-1.31.5.dist-info/METADATA
+     1451  09-16-2026 17:01   pg8000-1.31.5.dist-info/RECORD
+        4  09-16-2026 17:01   pg8000-1.31.5.dist-info/INSTALLER
+       87  09-16-2026 17:01   pg8000-1.31.5.dist-info/WHEEL
+        0  09-16-2026 17:01   pg8000-1.31.5.dist-info/licenses/
+     1541  09-16-2026 17:01   pg8000-1.31.5.dist-info/licenses/LICENSE
+        0  09-16-2026 17:01   pg8000-1.31.5.dist-info/REQUESTED
+    34703  09-16-2026 17:01   six.py
+        0  09-16-2026 17:01   pg8000/
+    30918  09-16-2026 17:01   pg8000/dbapi.py
+     9293  09-16-2026 17:01   pg8000/native.py
+    25800  09-16-2026 17:01   pg8000/legacy.py
+     8397  09-16-2026 17:01   pg8000/types.py
+        0  09-16-2026 17:01   pg8000/__pycache__/
+    27734  09-16-2026 17:01   pg8000/__pycache__/converters.cpython-313.pyc
+    10441  09-16-2026 17:01   pg8000/__pycache__/native.cpython-313.pyc
+consumer $ python3 - <<'PY'
+> import json
+> import os
+> 
+> config = {
+>     "Variables": {
+>         "DB_HOST": os.environ["DB_ENDPOINT"],
+>         "DB_PORT": os.environ["DB_PORT"],
+>         "DB_NAME": os.environ["DB_NAME"],
+>         "DB_USER": os.environ["DB_USER"],
+>         "DB_PASSWORD": os.environ["DB_PASSWORD"],
+>         "OUTPUT_BUCKET": os.environ["OUTPUT_BUCKET"]
+>     }
+> }
+> 
+> with open("consumer-environment.json", "w") as f:
+>     json.dump(config, f)
+> PY
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "<frozen os>", line 717, in __getitem__
+KeyError: 'DB_PASSWORD'
+consumer $ python3 - <<'PY'
+> import json
+> 
+> with open("consumer-environment.json") as f:
+>     data = json.load(f)
+> 
+> print(list(data["Variables"].keys()))
+> PY
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'consumer-environment.json'
+consumer $ aws lambda create-function \
+>   --function-name "$CONSUMER_FUNCTION" \
+>   --runtime python3.12 \
+>   --architectures x86_64 \
+>   --handler lambda_function.lambda_handler \
+>   --role "$LAMBDA_ROLE_ARN" \
+>   --zip-file fileb://atividade6-consumer.zip \
+>   --timeout 60 \
+>   --memory-size 256 \
+>   --environment file://consumer-environment.json \
+>   --vpc-config "SubnetIds=$SUBNET_IDS,SecurityGroupIds=$RDS_SG" \
+>   --description "Atividade 6 - Consumer SQS com enriquecimento PostgreSQL e gravacao S3" \
+>   --region "$REGION"
+
+aws: [ERROR]: An error occurred (ParamValidation): Error parsing parameter '--environment': Unable to load paramfile file://consumer-environment.json: [Errno 2] No such file or directory: 'consumer-environment.json'
+consumer $ echo "DB_ENDPOINT=$DB_ENDPOINT"
+DB_ENDPOINT=atividade6-postgres.cjgaeoimin5x.us-east-2.rds.amazonaws.com
+consumer $ echo "DB_PORT=$DB_PORT"
+DB_PORT=5432
+consumer $ echo "DB_NAME=$DB_NAME"
+DB_NAME=postgres
+consumer $ echo "DB_USER=$DB_USER"
+DB_USER=postgres
+consumer $ echo "OUTPUT_BUCKET=$OUTPUT_BUCKET"
+OUTPUT_BUCKET=atividade6-output-041525320433-us-east-2
+consumer $ echo "SUBNET_IDS=$SUBNET_IDS"
+SUBNET_IDS=subnet-064737ae0fa826b47,subnet-089e6ed4ad110df78,subnet-02243f0a6c7201fd9
+consumer $ echo "RDS_SG=$RDS_SG"
+RDS_SG=sg-0aa4d3e5586907430
+consumer $ read -s -p "Digite a senha do PostgreSQL: ***entrada oculta***
+Digite a senha do PostgreSQL: ***entrada oculta***
+bash: postgres: command not found
+consumer $ read -s -p "Digite a senha do PostgreSQL: ***entrada oculta***
+Digite a senha do PostgreSQL: ***entrada oculta***
+consumer $ read -s -p "Digite a senha do PostgreSQL: ***entrada oculta***
+Digite a senha do PostgreSQL: ***entrada oculta***
+>     echo "DB_PASSWORD definida com sucesso."
+> else
+>     echo "ERRO: DB_PASSWORD esta vazia."
+> fi
+DB_PASSWORD definida com sucesso.
+consumer $ python3 - <<'PY'
+> import json
+> import os
+> 
+> config = {
+>     "Variables": {
+>         "DB_HOST": os.environ["DB_ENDPOINT"],
+>         "DB_PORT": os.environ["DB_PORT"],
+>         "DB_NAME": os.environ["DB_NAME"],
+>         "DB_USER": os.environ["DB_USER"],
+>         "DB_PASSWORD": os.environ["DB_PASSWORD"],
+>         "OUTPUT_BUCKET": os.environ["OUTPUT_BUCKET"]
+>     }
+> }
+> 
+> with open("consumer-environment.json", "w") as f:
+>     json.dump(config, f)
+> 
+> print("consumer-environment.json criado com sucesso.")
+> PY
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "<frozen os>", line 717, in __getitem__
+KeyError: 'DB_PASSWORD'
+consumer $ 
