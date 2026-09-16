@@ -1,27 +1,66 @@
 # Roteiro de evidências — Atividade 6
 
-Crie capturas de tela e salve nesta pasta `evidencias/` com nomes numerados.
+A pasta `evidencias/` consolida as evidências efetivamente produzidas no desenvolvimento e na validação do pipeline.
 
-## Evidências mínimas
+## Evidências principais já registradas
 
-1. `01_terraform_apply.png` — infraestrutura provisionada.
-2. `02_s3_input.png` — bucket de entrada.
-3. `03_lambda_producer.png` — função e trigger S3.
-4. `04_sqs.png` — fila principal e DLQ.
-5. `05_lambda_consumer.png` — função e trigger SQS.
-6. `06_rds.png` — instância PostgreSQL.
-7. `07_upload_referencia.png` — referência enviada ao S3.
-8. `08_log_referencia.png` — log de UPSERT.
-9. `09_upload_eventos.png` — eventos enviados ao S3.
-10. `10_log_consumer.png` — processamento/enriquecimento.
-11. `11_s3_output.png` — arquivos de saída.
-12. `12_json_enriquecido.png` — conteúdo de um resultado.
+1. Configuração e execução da Lambda Producer.
+2. Configuração e execução da Lambda Consumer.
+3. Integração S3 → Producer.
+4. Integração SQS → Consumer.
+5. Teste manual da Consumer com acesso ao PostgreSQL.
+6. Teste ponta a ponta com três registros.
+7. Logs do CloudWatch da Producer.
+8. Logs do CloudWatch da Consumer.
+9. Estado final da fila principal: 0 mensagens disponíveis e 0 em voo.
+10. Estado final da DLQ: 0 mensagens.
+11. Criação de três novos JSONs no S3 Output.
+12. Conteúdo dos JSONs enriquecidos e do registro sem correspondência.
 
-## Evidências complementares
+## Teste de referência
 
-- métricas da fila SQS;
-- número de invocações das Lambdas;
-- mensagem na DLQ em teste controlado;
-- `terraform output`;
-- diagrama arquitetural;
-- comparação do registro original com o registro enriquecido.
+Arquivo de entrada utilizado:
+
+`eventos-20260916-183840.csv`
+
+Resultados:
+
+| Protocolo | CNPJ normalizado | Enriquecimento |
+|---|---|---|
+| REC-E2E-001 | 11111111000191 | Servicos / Empresa Exemplo A |
+| REC-E2E-002 | 22222222000182 | Comercio / Empresa Exemplo B |
+| REC-E2E-003 | 99999999000199 | sem correspondência |
+
+## Arquivos de evidência
+
+- `Relatorio_Evidencias_Atividade6_AWS.docx`
+- `Manifesto_Evidencias_Atividade6.csv`
+- `README_EVIDENCIAS.md`
+- `logs/01_execucao_infraestrutura_e_producer_sanitizado.txt`
+- `logs/02_criacao_consumer_e_autenticacao_sanitizado.txt`
+- `logs/03_teste_ponta_a_ponta_sanitizado.txt`
+- `08_teste_referencia_postgresql.png`
+
+## Evidências adicionais recomendadas
+
+Caso seja necessário complementar a apresentação, registrar capturas do Console AWS mostrando:
+
+- bucket de entrada e notificação S3;
+- Lambda Producer;
+- fila SQS e DLQ;
+- Event Source Mapping da Consumer;
+- Lambda Consumer;
+- RDS PostgreSQL;
+- objetos `processed/` no bucket de saída;
+- métricas e logs do CloudWatch.
+
+## Segurança
+
+Nunca registrar ou versionar:
+
+- senha do PostgreSQL;
+- Access Key / Secret Access Key;
+- arquivos `.env`;
+- arquivos de configuração com credenciais.
+
+Os logs disponibilizados no repositório foram sanitizados.
