@@ -1,6 +1,6 @@
 ﻿param(
     [string]$PacoteZip = "$env:USERPROFILE\Downloads\Atividade6_Evidencias_Pacote.zip",
-    [string]$DestinoProjeto = "D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade6"
+    [string]$DestinoProjeto = "D:\GitHub\C3-Trabalho-Ingestao-Pipeline-Atividade7"
 )
 
 $ErrorActionPreference = "Stop"
