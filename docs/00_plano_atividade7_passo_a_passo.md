@@ -102,7 +102,7 @@ Nunca versionar ou capturar em evidências:
 - [x] Implementação-base localizada.
 - [x] Arquitetura compatível com o enunciado identificada.
 - [x] Plano passo a passo registrado.
-- [ ] Etapa 1 — sincronização e conferência local.
+- [x] Etapa 1 — sincronização e conferência local.
 - [ ] Etapa 2 — inventário atual dos recursos AWS.
 - [ ] Etapa 3 — validação da Producer.
 - [ ] Etapa 4 — validação da SQS.
