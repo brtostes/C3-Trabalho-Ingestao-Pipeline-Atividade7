@@ -84,3 +84,29 @@ Não há evidência de erro da AWS CLI ou das credenciais nesta execução. O pr
 
 ### Correção
 Executar os comandos em uma única linha ou utilizar a crase/backtick (`) como continuação de linha no PowerShell.
+
+
+## 19/09/2026 — Etapa 2: falha de autenticação da AWS CLI
+
+### Resultado observado
+A AWS CLI respondeu com erros de autenticação em todos os serviços consultados:
+
+```text
+InvalidClientTokenId
+InvalidToken
+UnrecognizedClientException
+```
+
+O comando `aws configure get region` retornou:
+
+```text
+us-east-1
+```
+
+### Diagnóstico
+A AWS CLI está instalada e executando, porém as credenciais atualmente carregadas no Windows são inválidas, expiradas ou estão sendo sobrescritas por credenciais temporárias antigas. Como o erro ocorre já em `aws sts get-caller-identity`, o problema antecede S3, Lambda, SQS e RDS.
+
+A região configurada como `us-east-1` também difere da região usada anteriormente no pipeline (`us-east-2`), mas essa divergência não explica o erro de token. A autenticação deve ser corrigida primeiro.
+
+### Próxima ação
+Identificar, sem expor segredos, de onde a AWS CLI está obtendo as credenciais (`aws configure list`, perfis existentes e nomes das variáveis `AWS_*`) e então renovar a sessão/credenciais temporárias do ambiente AWS Try Catch Finally.
