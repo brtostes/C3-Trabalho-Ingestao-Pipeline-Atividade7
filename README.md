@@ -1,6 +1,10 @@
-# Atividade 6 — Pipeline em Cloud Computing com S3, Lambda, SQS e PostgreSQL
+# Atividade 7 — Pipeline em Cloud Computing - Streaming (AWS)
 
 ## Visão geral
+
+> **Contexto atual — Atividade 7 (19/09/2026):** este repositório passa a ser utilizado como base da Atividade 7 da disciplina de Ingestão de Dados. O enunciado exige o fluxo **S3 → Lambda produtora → SQS → Lambda consumidora com consulta SQL → S3**. A implementação existente já materializa esse fluxo e será reaproveitada para reduzir retrabalho no ambiente AWS Try Catch Finally. Os recursos AWS ainda possuem o prefixo `atividade6-` porque foram provisionados e validados anteriormente; antes da entrega da Atividade 7 será executado um novo teste ponta a ponta e serão registradas evidências específicas da Atividade 7.
+
+> Plano de execução incremental: `docs/00_plano_atividade7_passo_a_passo.md`.
 
 Esta atividade teve como objetivo implementar e validar, em ambiente AWS, um pipeline orientado a eventos capaz de receber arquivos CSV, transformar cada registro em uma mensagem, processá-la de forma desacoplada, realizar enriquecimento a partir de uma base PostgreSQL e persistir o resultado novamente no Amazon S3.
 
