@@ -110,3 +110,20 @@ A região configurada como `us-east-1` também difere da região usada anteriorm
 
 ### Próxima ação
 Identificar, sem expor segredos, de onde a AWS CLI está obtendo as credenciais (`aws configure list`, perfis existentes e nomes das variáveis `AWS_*`) e então renovar a sessão/credenciais temporárias do ambiente AWS Try Catch Finally.
+
+
+## 19/09/2026 — Etapa 2: origem das credenciais identificada
+
+### Resultado do diagnóstico
+O comando `aws configure list` mostrou que:
+
+- não há perfil explicitamente selecionado;
+- existe apenas o perfil `default`;
+- `access_key` e `secret_key` estão sendo lidas do arquivo compartilhado de credenciais (`~/.aws/credentials`);
+- a região configurada no arquivo `~/.aws/config` é `us-east-1`;
+- não existem variáveis de ambiente `AWS_*` definidas na sessão atual.
+
+### Interpretação
+A AWS CLI está usando as credenciais persistidas no perfil `default` do Windows. Como o teste STS anterior retornou token inválido, essas credenciais precisam ser renovadas ou substituídas antes de qualquer inventário dos recursos AWS.
+
+A próxima verificação será feita sem revelar segredos: identificar apenas o prefixo do Access Key ID e verificar se existe um `aws_session_token` associado ao perfil.
