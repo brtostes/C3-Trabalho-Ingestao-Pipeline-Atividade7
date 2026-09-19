@@ -65,3 +65,22 @@ Estrutura local confirmada:
 - `README.md`
 
 Conclusão: a Etapa 1 foi concluída e o repositório local está sincronizado e íntegro. Próxima etapa: inventário dos recursos AWS do pipeline.
+
+
+## 19/09/2026 — Etapa 2: primeiro teste do inventário AWS
+
+### Ocorrência
+O primeiro bloco de comandos AWS foi executado no **Windows PowerShell**, mas utilizava `\` como caractere de continuação de linha. Esse formato é próprio de shells Unix/Linux (como Bash) e não é válido no PowerShell.
+
+O PowerShell interpretou as linhas iniciadas por `--query` e `--output` como expressões independentes, gerando erros como:
+
+```text
+Expressão ausente após operador unário '--'.
+Token 'query' inesperado na expressão ou instrução.
+```
+
+### Diagnóstico
+Não há evidência de erro da AWS CLI ou das credenciais nesta execução. O problema ocorreu **antes da chamada à AWS**, durante a interpretação do comando pelo PowerShell.
+
+### Correção
+Executar os comandos em uma única linha ou utilizar a crase/backtick (`) como continuação de linha no PowerShell.
