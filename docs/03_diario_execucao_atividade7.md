@@ -127,3 +127,23 @@ O comando `aws configure list` mostrou que:
 A AWS CLI está usando as credenciais persistidas no perfil `default` do Windows. Como o teste STS anterior retornou token inválido, essas credenciais precisam ser renovadas ou substituídas antes de qualquer inventário dos recursos AWS.
 
 A próxima verificação será feita sem revelar segredos: identificar apenas o prefixo do Access Key ID e verificar se existe um `aws_session_token` associado ao perfil.
+
+
+## 19/09/2026 — Etapa 2: credenciais temporárias expiradas identificadas
+
+### Evidências
+A Access Key ID configurada inicia com `ASIA`, e o perfil `default` possui `aws_session_token`.
+
+Isso caracteriza o uso de credenciais temporárias do AWS Security Token Service (STS). Os arquivos locais `~/.aws/config` e `~/.aws/credentials` foram modificados em 30/07/2026, enquanto a execução atual ocorreu em 19/09/2026.
+
+### Diagnóstico
+As credenciais temporárias persistidas localmente estão expiradas. Isso explica os erros `InvalidClientTokenId`, `InvalidToken` e `UnrecognizedClientException`.
+
+### Ação corretiva
+Obter um novo conjunto de credenciais temporárias no ambiente AWS Try Catch Finally e substituir, no perfil `default`, os três componentes:
+
+- `aws_access_key_id`;
+- `aws_secret_access_key`;
+- `aws_session_token`.
+
+Após isso, configurar a região operacional do projeto como `us-east-2` e validar a autenticação com `aws sts get-caller-identity`.
