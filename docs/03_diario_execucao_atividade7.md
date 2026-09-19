@@ -38,3 +38,30 @@ nothing to commit, working tree clean
 ```
 
 e as pastas principais (`docs`, `evidencias`, `infra`, `lambdas`, `sample`, `scripts`) estiverem novamente presentes.
+
+
+## 19/09/2026 — Etapa 1 concluída
+
+Após executar `git restore .`, a cópia local foi restaurada com sucesso.
+
+Resultado confirmado:
+
+```text
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+```
+
+Estrutura local confirmada:
+
+- `docs/`
+- `evidencias/`
+- `infra/`
+- `lambdas/`
+- `sample/`
+- `scripts/`
+- `.gitignore`
+- `README.md`
+
+Conclusão: a Etapa 1 foi concluída e o repositório local está sincronizado e íntegro. Próxima etapa: inventário dos recursos AWS do pipeline.
